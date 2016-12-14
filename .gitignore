@@ -1,0 +1,19 @@
+# File Types
+*.DS_store
+*.py[cod]
+
+# Directories
+analysis/
+data/
+notes/
+exposition/
+stimuli/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+
+
