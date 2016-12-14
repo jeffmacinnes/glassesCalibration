@@ -3,7 +3,6 @@
 *.py[cod]
 
 # Directories
-analysis/
 data/
 notes/
 exposition/
