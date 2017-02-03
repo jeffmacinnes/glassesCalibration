@@ -3,10 +3,10 @@
 *.py[cod]
 
 # Directories
-data/
+*/data/
 notes/
 exposition/
-stimuli/
+referenceGrids/
 
 # Jupyter Notebooks
 .ipynb_checkpoints
