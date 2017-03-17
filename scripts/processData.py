@@ -350,7 +350,7 @@ if __name__ == '__main__':
 	else:
 		## copy the data
 		print('copying preprocessed data to {}...'.format(join('data', args.condition)))
-		#copyPreprocessing(args.preprocessedDir, args.condition)
+		copyPreprocessing(args.preprocessedDir, args.condition)
 
 		## process the recording
 		print('processing the recording...')
