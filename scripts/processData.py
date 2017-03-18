@@ -21,6 +21,10 @@ Output:
 	- gazeData_mapped.tsv:	gazeData mapped to all 3 coordinate systems
 """
 
+# python 2/3 compatibility
+from __future__ import division
+from __future__ import print_function
+
 import os, sys
 import shutil
 import cv2
