@@ -13,6 +13,8 @@ conditions = ['101_Tobii_2M_0deg',
 			'101_Tobii_3M_10Ldeg',
 			'101_Tobii_3M_10Rdeg']
 
+conditions = ['101_Tobii_3M_0deg']
+
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)
 

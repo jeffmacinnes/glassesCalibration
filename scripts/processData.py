@@ -105,6 +105,32 @@ def mapCoords2D(coords, transform2D):
 	return mappedCoords[0], mappedCoords[1] 
 
 
+def projectImage2D(origFrame, transform2D, newImage):
+	"""
+	Will warp the new Imag according to the supplied transformation matrix and write into the original frame
+	"""
+	# warp the new image to the video frame
+	warpedImage = cv2.warpPerspective(newImage, transform2D, origFrame.T.shape[1:])
+
+	# mask and subtract new image from video frame
+	warpedImage_bw = cv2.cvtColor(warpedImage, cv2.COLOR_BGR2GRAY)
+	if warpedImage.shape[2] == 4:
+		alpha = warpedImage[:,:,3]
+		alpha[alpha == 255] = 1 			# create mask of non-transparent pixels
+		warpedImage_bw =cv2.multiply(warpedImage_bw, alpha)
+
+	ret, mask = cv2.threshold(warpedImage_bw, 10, 255, cv2.THRESH_BINARY)
+	mask_inv = cv2.bitwise_not(mask)
+	origFrame_bg = cv2.bitwise_and(origFrame, origFrame, mask=mask_inv)
+
+	# mask the warped new image, and add to the masked background frame
+	warpedImage_fg = cv2.bitwise_and(warpedImage[:,:,:3], warpedImage[:,:,:3], mask=mask)
+	newFrame = cv2.add(origFrame_bg, warpedImage_fg)
+
+	# return the warped new frame
+	return newFrame
+
+
 def processRecording(condition):
 	"""
 	process the preprocessed data saved in the directory specifed by 'condition'
@@ -165,6 +191,10 @@ def processRecording(condition):
 	vidOut_calibGrid = cv2.VideoWriter()
 	vidOut_calibGrid.open(vidOut_calibGrid_fname, vidCodec, fps, (calibImg.shape[1], calibImg.shape[0]), True)
 
+	vidOut_border2world_fname = join(procDir, 'border2World_mapped.m4v')
+	vidOut_border2world = cv2.VideoWriter()
+	vidOut_border2world.open(vidOut_border2world_fname, vidCodec, fps, vidSize, True)
+
 	### Find mapping between border and calibration grid images ##################
 	# find keypoints, descriptors for each image
 	borderImg_kp, borderImg_des = featureDetect.detectAndCompute(borderImg, None)
@@ -186,7 +216,7 @@ def processRecording(condition):
 	calib2border_transform = calib2border_transform[1]
 
 	### Loop over video frames #########################################################
-	framesToUse = np.arange(0, 10000, 1)
+	framesToUse = np.arange(235, 10000, 1)
 	if totalFrames > framesToUse.max():
 		framesToUse = framesToUse[framesToUse <= totalFrames]  	# make sure no attempts on nonexistent frames
 
@@ -211,6 +241,9 @@ def processRecording(condition):
 
 				# grab the gaze data (world coords) for this frame
 				thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['frame_idx'] == frameCounter]
+
+				# project the border image back into the video as a way to check for good mapping
+				border2world_frame = projectImage2D(processedFrame['origFrame'], processedFrame['border2world'], borderImgColor)
 
 				# loop over all gaze data for this frame, translate to different coordinate systems
 				for i, gazeRow in thisFrame_gazeData_world.iterrows():
@@ -250,11 +283,15 @@ def processRecording(condition):
 					cv2.circle(frame, (int(world_gazeX), int(world_gazeY)), dotSize, dotColor, -1)						# world frame
 					cv2.circle(border_frame, (int(border_gazeX), int(border_gazeY)),  dotSize, dotColor, -1)				# border frame
 					cv2.circle(calibGrid_frame, (int(calibGrid_gazeX), int(calibGrid_gazeY)),  dotSize, dotColor, -1)	# calibGrid frame
+			else:
+				# if not a good match, just use the original frame for the border2world
+				border2world_frame = processedFrame['origFrame']
 
 			# write outputs to video
 			vidOut_world.write(frame)
 			vidOut_border.write(border_frame)
 			vidOut_calibGrid.write(calibGrid_frame)
+			vidOut_border2world.write(border2world_frame)
 
 		# increment frame counter
 		frameCounter += 1
@@ -264,6 +301,7 @@ def processRecording(condition):
 			vidOut_world.release()
 			vidOut_border.release()
 			vidOut_calibGrid.release()
+			vidOut_border2world.release()
 
 			# write out gaze data
 			try:
@@ -356,7 +394,7 @@ if __name__ == '__main__':
 	else:
 		## copy the data
 		print('copying preprocessed data to {}...'.format(join('data', args.condition)))
-		copyPreprocessing(args.preprocessedDir, args.condition)
+		#copyPreprocessing(args.preprocessedDir, args.condition)
 
 		## process the recording
 		print('processing the recording...')

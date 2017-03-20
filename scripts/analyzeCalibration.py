@@ -139,41 +139,44 @@ def processCalibration(condition):
 			# drop datapts where the distance is more than 5 deg of visual angle away from calib pt
 			trialGaze_df = trialGaze_df[trialGaze_df['distance'] < 5]
 
-			### Summarize this trial ################################
-			# calculate percent of valid timepts
-			percentValid = trialGaze_df.shape[0]/idealMaxGazePts
+			if trialGaze_df.shape[0] > 0:
 
-			# calculate centroid coords (mean gaze X,Y in calib coordinate space)
-			centroidX = np.mean(trialGaze_df.calibGrid_gazeX)
-			centroidY = np.mean(trialGaze_df.calibGrid_gazeY)
+				### Summarize this trial ################################
+				# calculate percent of valid timepts
+				percentValid = trialGaze_df.shape[0]/idealMaxGazePts
 
-			# calculate distance and angle from ideal for the centroid
-			centDist = getDistance(idealLocation[0], idealLocation[1], centroidX, centroidY, distance)
-			centAngle = getAngle(idealLocation[0], idealLocation[1], centroidX, centroidY)
+				# calculate centroid coords (mean gaze X,Y in calib coordinate space)
+				centroidX = np.mean(trialGaze_df.calibGrid_gazeX)
+				centroidY = np.mean(trialGaze_df.calibGrid_gazeY)
 
-			# calculate precision: RMS (root mean squared) of distance between each gazept and centroid
-			distFromCentroid = trialGaze_df.apply(lambda d: getDistance(centroidX,
-																		centroidY,
-																		d['calibGrid_gazeX'], 
-																		d['calibGrid_gazeY'],
-																		distance), axis=1)
-			RMS = np.sqrt(np.sum(np.square(distFromCentroid)) * (1/distFromCentroid.shape[0]))
+				# calculate distance and angle from ideal for the centroid
+				centDist = getDistance(idealLocation[0], idealLocation[1], centroidX, centroidY, distance)
+				centAngle = getAngle(idealLocation[0], idealLocation[1], centroidX, centroidY)
 
-			# write all of this trial's data to a dataframe
-			trialSummary = pd.DataFrame({'trial': thisTrial, 
-											'ptIdx':ptIdx,
-											'percentValid':percentValid,
-											'centX':centroidX, 'centY':centroidY,
-											'RMS':RMS,
-											'centDist':centDist, 'centAngle':centAngle}, index=[0])
+				# calculate precision: RMS (root mean squared) of distance between each gazept and centroid
+				distFromCentroid = trialGaze_df.apply(lambda d: getDistance(centroidX,
+																			centroidY,
+																			d['calibGrid_gazeX'], 
+																			d['calibGrid_gazeY'],
+																			distance), axis=1)
 
-			# add this trial summary to the master dataframe for all trials
-			if i == 0:
-				gazeCalibration_df = trialGaze_df.copy()
-				allTrials_summarized = trialSummary.copy()
-			else:
-				gazeCalibration_df = pd.concat([gazeCalibration_df, trialGaze_df], join='outer', ignore_index=True)
-				allTrials_summarized = pd.concat([allTrials_summarized, trialSummary], join='outer', ignore_index=True)
+				RMS = np.sqrt(np.sum(np.square(distFromCentroid)) * (1/distFromCentroid.shape[0]))
+
+				# write all of this trial's data to a dataframe
+				trialSummary = pd.DataFrame({'trial': thisTrial, 
+												'ptIdx':ptIdx,
+												'percentValid':percentValid,
+												'centX':centroidX, 'centY':centroidY,
+												'RMS':RMS,
+												'centDist':centDist, 'centAngle':centAngle}, index=[0])
+
+				# add this trial summary to the master dataframe for all trials
+				if 'gazeCalibration_df' not in locals():
+					gazeCalibration_df = trialGaze_df.copy()
+					allTrials_summarized = trialSummary.copy()
+				else:
+					gazeCalibration_df = pd.concat([gazeCalibration_df, trialGaze_df], join='outer', ignore_index=True)
+					allTrials_summarized = pd.concat([allTrials_summarized, trialSummary], join='outer', ignore_index=True)
 
 	### Write to text files
 	gazeCalibration_colOrder = ['trial', 'ptIdx', 'col', 'row', 'trial_ts', 'task_ts', 'gaze_ts',
