@@ -267,7 +267,9 @@ def processRecording(condition):
 
 			# write out gaze data
 			try:
-				gazeMapped_df.to_csv(join(procDir, 'gazeData_mapped.tsv'), sep='\t', index=False, float_format='%.3f')
+				colOrder = ['worldFrame', 'gaze_ts', 'confidence',
+							'world_gazeX', 'world_gazeY', 'border_gazeX', 'border_gazeY', 'calibGrid_gazeX', 'calibGrid_gazeY']
+				gazeMapped_df[colOrder].to_csv(join(procDir, 'gazeData_mapped.tsv'), sep='\t', index=False, float_format='%.3f')
 			except:
 				print('cound not write gazeData_mapped to csv')
 				pass

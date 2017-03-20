@@ -25,11 +25,16 @@ import argparse
 import numpy as np
 import pandas as pd
 from os.path import join
+import matplotlib
+matplotlib.use('tkagg')
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 ### Configuration vars
 startImage_path = '../task/startImage.jpg'
 trialDur = 3000
 trialWin = (500, 2500)
+calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
 
 # dict to store the pixels/deg visual angle on the calibration grid at various distances
 pixPerDeg = {'1M': 85.8, '2M': 171.2, '3M': 256.7}
@@ -47,7 +52,6 @@ def processCalibration(condition):
 
 	# store the maximum number of gazepts per trial under ideal conditons for these glasses
 	idealMaxGazePts = int((trialWin[1]-trialWin[0])/1000 * gaze_fps[glasses])
-	print(idealMaxGazePts)
 
 	### set up inputs/outputs
 	dataDir = join('../data', condition)
@@ -81,7 +85,6 @@ def processCalibration(condition):
 	gazeWorld_df = pd.read_table(join(dataDir, 'gazeData_world.tsv'), sep='\t')
 	startImage_df = gazeWorld_df[gazeWorld_df.frame_idx == (startFrameNum-1)].iloc[0]
 	taskStartTime = startImage_df.timestamp
-	print(taskStartTime)
 
 	### Load the mapped gaze data, add column with ts relative to the task
 	gaze_df = pd.read_table(join(procDir, 'gazeData_mapped.tsv'), sep='\t')
@@ -95,6 +98,8 @@ def processCalibration(condition):
 	for i in range(taskLog.shape[0]):
 		# each point is pd.series object with entries for Col, Row, and Time
 		thisPt = taskLog.iloc[i]
+
+		thisTrial = str(i+1)
 
 		# get trial start time for this pt
 		trialStart = thisPt.time
@@ -117,6 +122,7 @@ def processCalibration(condition):
 			trialGaze_df['col'] = thisPt.col
 			trialGaze_df['row'] = thisPt.row
 			trialGaze_df['ptIdx'] = ptIdx
+			trialGaze_df['trial'] = thisTrial
 
 			# calculate gaze point distance/angle from the ideal location
 			idealLocation = ((1000/6)*thisPt.col, (1000/6)*thisPt.row)
@@ -154,7 +160,8 @@ def processCalibration(condition):
 			RMS = np.sqrt(np.sum(np.square(distFromCentroid)) * (1/distFromCentroid.shape[0]))
 
 			# write all of this trial's data to a dataframe
-			trialSummary = pd.DataFrame({'ptIdx':ptIdx,
+			trialSummary = pd.DataFrame({'trial': thisTrial, 
+											'ptIdx':ptIdx,
 											'percentValid':percentValid,
 											'centX':centroidX, 'centY':centroidY,
 											'RMS':RMS,
@@ -168,9 +175,21 @@ def processCalibration(condition):
 				gazeCalibration_df = pd.concat([gazeCalibration_df, trialGaze_df], join='outer', ignore_index=True)
 				allTrials_summarized = pd.concat([allTrials_summarized, trialSummary], join='outer', ignore_index=True)
 
-	# Write to text files
-	gazeCalibration_df.to_csv(join(calibDir, 'gazeData_calibration.tsv'), sep='\t', index=False, float_format='%.3f')
-	allTrials_summarized.to_csv(join(calibDir, 'calibrationSummary.tsv'), sep='\t', index=False, float_format='%.3f')
+	### Write to text files
+	gazeCalibration_colOrder = ['trial', 'ptIdx', 'col', 'row', 'trial_ts', 'task_ts', 'gaze_ts',
+					'worldFrame', 'confidence', 
+					'world_gazeX', 'world_gazeY', 
+					'border_gazeX', 'border_gazeY', 
+					'calibGrid_gazeX', 'calibGrid_gazeY',
+					'distance', 'angle']
+	gazeCalibration_df[gazeCalibration_colOrder].to_csv(join(calibDir, 'gazeData_calibration.tsv'), sep='\t', index=False, float_format='%.3f')
+	summary_colOrder = ['trial', 'ptIdx', 'percentValid', 
+						'centX', 'centY', 'centDist', 'centAngle', 'RMS']
+	allTrials_summarized[summary_colOrder].to_csv(join(calibDir, 'calibrationSummary.tsv'), sep='\t', index=False, float_format='%.3f')
+
+	### Plot the results
+	plotCalibrationGaze(gazeCalibration_df, condition, calibDir)
+	plotCalibrationSummary(allTrials_summarized, condition, calibDir)
 
 
 
@@ -282,12 +301,126 @@ def findStartFrame(vidPath):
 	return startFrameNum, startFrame
 
 
+def plotCalibrationGaze(gazeCalibration_df, condition, outputDir):
+	"""
+	plot all the gazepts for each calibration trial
+	"""
+	gridImg = mpimg.imread(calibGrid_path)
+
+	# axis formatting
+	matplotlib.rc('ytick', labelsize=20)
+	matplotlib.rc('xtick', labelsize=20)
+	fig = plt.figure(figsize=(16,8))
+	fig.suptitle(condition, fontsize=20, fontweight='bold')
+
+	### GazePts on calib grid
+	ax = fig.add_subplot(121)
+	ax.axis("off")
+	ax.imshow(gridImg, cmap='Greys_r', alpha=0.3)		# background img
+	ax.scatter(gazeCalibration_df.calibGrid_gazeX, gazeCalibration_df.calibGrid_gazeY, 
+				s=60, alpha=0.74, edgecolor='k', c=gazeCalibration_df.ptIdx, cmap='Vega20b')
+	
+	# set axis limits
+	ax.set_ylim(-250, 1250)
+	ax.set_xlim(-250, 1250)
+	ax.invert_yaxis()
+
+	### Gaze pts on Polar Plot
+	ax2 = fig.add_subplot(122, polar=True)
+	ax2.set_ylim(0,5)			
+	ax2.set_yticks([1,2,3])
+	ax2.yaxis.set_ticklabels(['1$^\circ$ ', '2$^\circ$ ', '3$^\circ$ '])		# for degree symbol
+
+	# plot gaze pts relative to center
+	ax2.scatter(np.deg2rad(gazeCalibration_df['angle'].astype(float)),
+							gazeCalibration_df['distance'].astype(float),
+							s=150, edgecolor='black', c=gazeCalibration_df.ptIdx, cmap='Vega20b', alpha=.74)
+
+	# put circle at center for reference
+	ax2.scatter(0,0, s=2000, facecolor='black', alpha=0.4)
+	ax2.spines['polar'].set_visible(False)
+
+	### save
+	plt.tight_layout()
+	plt.savefig(join(outputDir, 'calibrationPlot_raw.pdf'))
+	plt.close()
 
 
+def plotCalibrationSummary(calibSummary_df, condition, outputDir): 
+	"""
+	plot the summary of gaze calibration for this subject
+	"""
+	gridImg = mpimg.imread(calibGrid_path)
+	
+	# axis formatting
+	matplotlib.rc('ytick', labelsize=20)
+	matplotlib.rc('xtick', labelsize=20)
+	fig = plt.figure(figsize=(16,8))
+	fig.suptitle((condition + ' Summary'), fontsize=20, fontweight='bold')
 
+	### Summary plot on calibration grid
+	ax = fig.add_subplot(121)
+	ax.axis("off")
+	ax.imshow(gridImg, cmap='Greys_r', alpha=0.3)
 
+	# centroid location
+	ax.scatter(calibSummary_df.centX, calibSummary_df.centY, s=60, c=calibSummary_df.ptIdx, cmap='Vega20b')
 
+	# rms as circle enclosing centroid location
+	ax.scatter(calibSummary_df.centX, calibSummary_df.centY, 
+				s=1000*calibSummary_df.RMS, 
+				c=calibSummary_df.ptIdx, 
+				edgecolor='none',
+				cmap='Vega20b', alpha=0.5)
 
+	# draw connecting lines
+	cmap = plt.cm.get_cmap('Vega20b')
+	for p in sorted(calibSummary_df.ptIdx):
+		thisPt = calibSummary_df[calibSummary_df.ptIdx == p]
+
+		# figure out the x,y of this calibration point
+		p = p-1
+		col = p % 5 + 1
+		row = np.floor(np.true_divide(p,5))+1
+		idealLocation = ((1000/6)*col, (1000/6)*row)
+
+		# plot a line connecting everything
+		thisColor = cmap((p)/25)
+		xs = [thisPt.centX, idealLocation[0]]
+		ys = [thisPt.centY, idealLocation[1]]
+		ax.plot(xs, ys, color=thisColor, lw=1)
+
+	ax.set_ylim(-250,1250)
+	ax.set_xlim(-250,1250)
+	ax.invert_yaxis()
+
+	#### Polar Plot
+	ax2 = fig.add_subplot(122, polar=True)
+	ax2.set_ylim(0,5)
+	ax2.set_yticks([1,2,3])
+	ax2.yaxis.set_ticklabels(['1$^\circ$ ', '2$^\circ$ ', '3$^\circ$ '])		# for degree symbol
+	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)), 
+							calibSummary_df['centDist'].astype(float), 
+							s=150, 
+							edgecolor='black', 
+							c=calibSummary_df['ptIdx'], 
+							cmap='Vega20b', 
+							alpha=.74)
+	# rms
+	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)), 
+							calibSummary_df['centDist'].astype(float), 
+							s=1500*calibSummary_df.RMS, 
+							edgecolor='none', 
+							c=calibSummary_df['ptIdx'], 
+							cmap='Vega20b', 
+							alpha=.5)
+	ax2.scatter(0,0, s=2000, facecolor='black', alpha=.4)  # put circle at center for reference
+	ax2.spines['polar'].set_visible(False)
+
+	### save
+	plt.tight_layout()
+	plt.savefig(join(outputDir, 'calibrationPlot_summary.pdf'))
+	plt.close()
 
 
 if __name__ == '__main__':
