@@ -21,6 +21,7 @@ import argparse
 from datetime import datetime
 from os.path import join
 import numpy as np
+import pandas as pd
 import csv
 from itertools import chain
 
@@ -34,43 +35,8 @@ def preprocessData(inputDir, output_root):
 	""" 
 	Run all preprocessing steps for pupil lab data
 	"""
-
-	### Copy the raw data to a new directory
-	print('copying files...')
-	outputDir = copyPupilLabRecording(inputDir, output_root)
-
-	### Format the gaze data
-	print('formatting gaze data...')
-	gazeData_world, frame_timestamps = formatGazeData(inputDir)
-
-	### write the gazeData to to a csv file
-	print('writing file to csv...')
-	csv_file = join(outputDir, 'gazeData_world.tsv')
-	export_range = slice(0, len(gazeData_world))
-	with open(csv_file, 'w', encoding='utf-8', newline='') as csvfile:
-		csv_writer = csv.writer(csvfile, delimiter='\t')
-		csv_writer.writerow(("timestamp",
-							"frame_idx",
-							"confidence",
-							"norm_pos_x",
-							"norm_pos_y"))
-		for g in list(chain(*gazeData_world[export_range])):
-			data = ['{}'.format(g["timestamp"]), 
-								g["frame_idx"], 
-								g["confidence"],  
-								g["norm_pos"][0], 
-								g["norm_pos"][1]]  # use str on timestamp to be consitant with csv lib.
-			csv_writer.writerow(data)
-
-
-
-
-def copyPupilLabRecording(inputDir, output_root):
-	""" 
-	create a new output directory and copy the relevant files to it
-	"""
-	# get the timestamp from the info.csv file
-	info_file = join(inputDir, 'info.csv')
+	### Prep output directory
+	info_file = join(inputDir, 'info.csv')  	# get the timestamp from the info.csv file
 	with open(info_file, 'r') as f:
 		for line in f:
 			if 'Start Date' in line:
@@ -85,14 +51,44 @@ def copyPupilLabRecording(inputDir, output_root):
 	if not os.path.isdir(outputDir):
 		os.makedirs(outputDir)
 
-	# check if directory is empty, copy files over if so
-	for dirpath, dirnames, files in os.walk(outputDir):
-		if not files:
-			for f in ['world_timestamps.npy', 'pupil_data']:
-				shutil.copyfile(join(inputDir, f), join(outputDir, f))
+	### Format the gaze data
+	print('formatting gaze data...')
+	gazeData_world, frame_timestamps = formatGazeData(inputDir)
 
-	# return the path to the new output directory
-	return outputDir
+	# write the gazeData to to a csv file
+	print('writing file to csv...')
+	csv_file = join(outputDir, 'gazeData_world.tsv')
+	export_range = slice(0, len(gazeData_world))
+	with open(csv_file, 'w', encoding='utf-8', newline='') as csvfile:
+		csv_writer = csv.writer(csvfile, delimiter='\t')
+		csv_writer.writerow(("timestamp",
+							"frame_idx",
+							"confidence",
+							"norm_pos_x",
+							"norm_pos_y"))
+		for g in list(chain(*gazeData_world[export_range])):
+			data = ['{}'.format(g["timestamp"]*1000), 
+								g["frame_idx"], 
+								g["confidence"],  
+								g["norm_pos"][0], 
+								g["norm_pos"][1]]  # use str on timestamp to be consitant with csv lib.
+			csv_writer.writerow(data)
+
+	# write the frametimestamps to a csv file
+	frameNum = np.arange(1, frame_timestamps.shape[0]+1)
+	frame_ts_df = pd.DataFrame({'frameNum': frameNum, 'timestamp':frame_timestamps})
+	frame_ts_df.to_csv(join(outputDir, 'frame_timestamps.tsv'), sep='\t', float_format='%.3f', index=False)
+
+	### Compress and Move the world camera movie to the output 
+	print('copying world recording movie...')
+	if not 'worldCamera.mp4' in os.listdir(outputDir):
+		# compress
+		print('compressing world camera video')
+		cmd_str = ' '.join(['ffmpeg', '-i', join(inputDir, 'world.mp4'), '-pix_fmt', 'yuv420p', join(inputDir, 'worldCamera.mp4')])
+		os.system(cmd_str)
+
+		# move the file to the output directory
+		shutil.move(join(inputDir, 'worldCamera.mp4'), join(outputDir, 'worldCamera.mp4'))
 
 
 def formatGazeData(inputDir):
@@ -117,6 +113,10 @@ def formatGazeData(inputDir):
 
 	# align gaze with world camera timestamps
 	gaze_by_frame = correlate_data(gaze_list, frame_timestamps)
+	
+	# make frame_timestamps relative to the first data timestamp
+	start_timeStamp = gaze_by_frame[0][0]['timestamp']
+	frame_timestamps = (frame_timestamps - start_timeStamp) * 1000 # convert to ms
 
 	return gaze_by_frame, frame_timestamps
 

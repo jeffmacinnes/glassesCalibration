@@ -8,6 +8,7 @@ will be created for each recording. The output directory will be created within 
 and named according to [mo-day-yr]/[hr-min-sec] of the original creation time format. 
 
 The output directory will contain:
+	- frame_timestamps.tsv: frame number and corresponding timestamps for each frame in video
 	- worldCamera.mp4: the video from the point-of-view scene camera on the glasses
 	- gazeData_world.tsv: gaze data, where all gaze coordinates are represented w/r/t the world camera
 """
@@ -128,7 +129,8 @@ def formatGazeData(input_dir):
 	gaze_df = pd.DataFrame({'timestamp':data_ts, 'confidence':confidence, 'frame_idx': frame_idx, 'norm_pos_x':norm_gazeX, 'norm_pos_y':norm_gazeY})
 	
 	# return the gaze data df and frame time stamps array
-	return gaze_df, frame_timestamps
+	colOrder = ['timestamp', 'frame_idx', 'confidence', 'norm_pos_x', 'norm_pos_y']
+	return gaze_df[colOrder], frame_timestamps
 
 
 def getVidFrameTimestamps(vid_file):
