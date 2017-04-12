@@ -2,16 +2,16 @@
 step 2: processing
 
 This script will process data for the calibration task. Make sure to have completed step 1: preprocessing
-before starting. Preprocessing scripts vary by glasses model (check the specific glasses manufacturer directory). 
+before starting. Preprocessing scripts vary by glasses model (check the specific glasses manufacturer directory).
 
-This script assumes preprocessing has been done, and regardless of glasses model, the data has been converted to 
-a common format. 
+This script assumes preprocessing has been done, and regardless of glasses model, the data has been converted to
+a common format.
 
 This script will copy the preprocessed data from the ./<manufacturer>/data directory to a new directory in ./data.
 The new directory will be named according to subj and condition.
 
-It will loop through every frame of the worldCamera.mp4 video, and try to map the gaze coordinates from the world 
-coordinate system, to the border image, to the calibration grid image. 
+It will loop through every frame of the worldCamera.mp4 video, and try to map the gaze coordinates from the world
+coordinate system, to the border image, to the calibration grid image.
 
 Output will be stored in a directory called "processed"
 Output:
@@ -27,12 +27,11 @@ from __future__ import print_function
 
 import os, sys
 import shutil
-import cv2
 import time
 import argparse
 import json
-import numpy as np 
-import pandas as pd 
+import numpy as np
+import pandas as pd
 from os.path import join
 
 ### configuration vars
@@ -89,7 +88,7 @@ def findMatches(img1_kp, img1_des, img2_kp, img2_des):
 		img2_pts = np.float32([img2_kp[i.trainIdx].pt for i in goodMatches])
 
 		return img1_pts, img2_pts
-	
+
 	else:
 		return None, None
 
@@ -102,7 +101,7 @@ def mapCoords2D(coords, transform2D):
 	mappedCoords = cv2.perspectiveTransform(coords, transform2D)
 	mappedCoords = np.round(mappedCoords.ravel())
 
-	return mappedCoords[0], mappedCoords[1] 
+	return mappedCoords[0], mappedCoords[1]
 
 
 def projectImage2D(origFrame, transform2D, newImage):
@@ -135,13 +134,13 @@ def processRecording(condition):
 	"""
 	process the preprocessed data saved in the directory specifed by 'condition'
 
-	Map the gaze data from the source video coordinate system to the 
+	Map the gaze data from the source video coordinate system to the
 	background image, and ultimately to the calibration grid itself.
 	"""
 
 	### SetUp inputs/outputs
 	dataDir = join('../data', condition)
-	
+
 	# create dir to store output of processing
 	procDir = join(dataDir, 'processed')
 	if not os.path.isdir(procDir):
@@ -216,7 +215,7 @@ def processRecording(condition):
 	calib2border_transform = calib2border_transform[1]
 
 	### Loop over video frames #########################################################
-	framesToUse = np.arange(235, 10000, 1)
+	framesToUse = np.arange(0, 10000, 1)
 	if totalFrames > framesToUse.max():
 		framesToUse = framesToUse[framesToUse <= totalFrames]  	# make sure no attempts on nonexistent frames
 
@@ -225,7 +224,7 @@ def processRecording(condition):
 	while vid.isOpened():
 		# read the next frame of the video
 		ret, frame = vid.read()
-		
+
 		# check if it's a valid frame
 		if (ret==True) and (frameCounter in framesToUse):
 
@@ -326,7 +325,7 @@ def processFrame(frame, frameNumber, border_kp, border_des, featureDetect):
 		- if success, return the mapping
 	"""
 	fr = {}		# create dict to store info for this frame
-	
+
 	# create copy of original frame
 	origFrame = frame.copy()
 	fr['origFrame'] = origFrame 		# store
@@ -374,7 +373,7 @@ def processFrame(frame, frameNumber, border_kp, border_des, featureDetect):
 
 	except:
 		fr['foundGoodMatch'] = False
-	
+
 	# return the processed frame
 	return fr
 
@@ -394,15 +393,8 @@ if __name__ == '__main__':
 	else:
 		## copy the data
 		print('copying preprocessed data to {}...'.format(join('data', args.condition)))
-		#copyPreprocessing(args.preprocessedDir, args.condition)
+		copyPreprocessing(args.preprocessedDir, args.condition)
 
 		## process the recording
 		print('processing the recording...')
 		processRecording(args.condition)
-
-
-
-
-
-
-

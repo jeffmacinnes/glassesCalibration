@@ -6,14 +6,21 @@ import os
 from os.path import join
 import pandas as pd 
 
-conditions = ['101_Tobii_2M_0deg',
-			'101_Tobii_2M_10Ldeg',
-			'101_Tobii_2M_10Rdeg',
-			'101_Tobii_3M_0deg',
-			'101_Tobii_3M_10Ldeg',
-			'101_Tobii_3M_10Rdeg']
+conditions = ['101_Tobii_1M_0deg',
+			'101_Tobii_1M_10Ldeg',
+			'101_Tobii_1M_10Rdeg',
+			'102_Tobii_1M_0deg',
+			'102_Tobii_1M_10Ldeg',
+			'102_Tobii_1M_10Rdeg',
+			'102_Tobii_2M_10Ldeg']
 
-conditions = ['101_Tobii_3M_0deg']
+
+conditions = ['102_Tobii_2M_10Rdeg',
+			'102_Tobii_2M_0deg',
+			'102_Tobii_3M_0deg',
+			'102_Tobii_3M_10Rdeg',
+			'102_Tobii_3M_10Ldeg']
+
 
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)
@@ -23,14 +30,13 @@ metadata_df['condition'] = metadata_df['Subj'].map(str) + '_' + metadata_df['Gla
 
 
 for cond in conditions:
+
 	print('Submitting job for: {}'.format(cond))
 
 	thisRow = metadata_df.loc[metadata_df.condition == cond]
 	
 	# set up inputs
 	preprocDir = join('..', thisRow.Glasses.iloc[0], 'data', thisRow.Date.iloc[0])
-
-
 
 	try:
 		cmd_str = 'python processData.py ' + preprocDir + ' ' + cond 

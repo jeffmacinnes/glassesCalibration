@@ -94,6 +94,7 @@ def processCalibration(condition):
 	taskLog = pd.read_table(join(calibDir, (condition + '_taskLog.txt')))
 	calibGridDims = (taskLog.col.max(), taskLog.row.max())
 
+
 	### Loop through each calibration point
 	for i in range(taskLog.shape[0]):
 		# each point is pd.series object with entries for Col, Row, and Time
@@ -109,9 +110,12 @@ def processCalibration(condition):
 
 		# isolate the gaze data that corresponds to this pt only
 		trialGaze_df = gaze_df[(gaze_df.task_ts > trialStart) & (gaze_df.task_ts <= (trialStart + trialDur))]
-
+		print('HERE1')
+		print(trialGaze_df.columns)
 		# Insert col of timestamps relative to the trial onset
-		trialGaze_df.loc[:, 'trial_ts'] = trialGaze_df.task_ts - trialStart
+		trialGaze_df.assign(trial_ts = lambda x: x.task_ts - trialStart)
+		#trialGaze_df['trial_ts'] = trialGaze_df.task_ts - trialStart
+		print('HERE2')
 
 		# isolate the trial data to only those timepoints that fall within the specified analysis window
 		trialGaze_df = trialGaze_df[(trialGaze_df.trial_ts > trialWin[0]) & (trialGaze_df.trial_ts <= trialWin[1])]
