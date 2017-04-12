@@ -1,11 +1,11 @@
 """
-Format raw Tobii data. 
+Format raw Tobii data.
 
 Tested with Python 3.6, open CV 3.2
 
 Since the data originates on a SD card (or temp directory somewhere), a new output directory
 will be created for each recording. The output directory will be created within the output root path specified by the user,
-and named according to [mo-day-yr]/[hr-min-sec] of the original creation time format. 
+and named according to [mo-day-yr]/[hr-min-sec] of the original creation time format.
 
 The output directory will contain:
 	- frame_timestamps.tsv: frame number and corresponding timestamps for each frame in video
@@ -49,8 +49,17 @@ def preprocessData(inputDir, output_root):
 	frame_ts_df = pd.DataFrame({'frameNum':frameNum, 'timestamp':frame_timestamps})
 	frame_ts_df.to_csv(join(newDataDir, 'frame_timestamps.tsv'), sep='\t', index=False)
 
-	### rename video file to worldCamera.mp4
-	os.rename(join(newDataDir, 'fullstream.mp4'), join(newDataDir, 'worldCamera.mp4'))
+	### compress movie
+	print('Compressing movie file...')
+	cmd_str = ' '.join(['ffmpeg', '-i', join(newDataDir, 'fullstream.mp4'), '-pix_fmt', 'yuv420p', join(newDataDir, 'worldCamera.mp4')])
+	os.system(cmd_str)
+
+	### cleanup
+	for f in ['fullstream.mp4', 'livedata.json']:
+		try:
+			os.remove(join(newDataDir, f))
+		except:
+			pass
 
 
 def copyTobiiRecording(input_dir, output_root):
@@ -62,7 +71,7 @@ def copyTobiiRecording(input_dir, output_root):
 	with open(join(input_dir, 'segment.json')) as j:
 		segData = json.loads(j.read())
 	createDate = segData['seg_created']
-	dt = datetime.strptime(createDate, "%Y-%m-%dT%H:%M:%S+0000") 
+	dt = datetime.strptime(createDate, "%Y-%m-%dT%H:%M:%S+0000")
 
 	# create a new output directory based on creation date
 	date_dir = dt.strftime('%Y_%m_%d')
@@ -71,7 +80,7 @@ def copyTobiiRecording(input_dir, output_root):
 		os.makedirs(join(output_root, date_dir, time_dir))
 	outputDir = join(output_root, date_dir, time_dir)
 
-	# Copy relevent files to new directory 
+	# Copy relevent files to new directory
 	for f in ['livedata.json.gz', 'fullstream.mp4']:
 		shutil.copyfile(join(input_dir, f), join(outputDir, f))
 
@@ -95,7 +104,7 @@ def formatGazeData(input_dir):
 	Returns:
 		- formatted dataframe with cols for timestamp, frame_idx, and normalized gaze data X & Y
 		- np array of frame timestamps
-	""" 
+	"""
 
 	# convert the json file to pandas dataframe
 	raw_df = json_to_df(join(input_dir, 'livedata.json'))
@@ -107,12 +116,11 @@ def formatGazeData(input_dir):
 	data_ts = raw_df.index.values / 1000		# convert data timestamps from microseconds to ms
 	confidence = raw_df['confidence'].values
 	norm_gazeX = raw_df['gaze_pos_x'].values
-	norm_gazeY = raw_df['gaze_pos_y'].values	
+	norm_gazeY = raw_df['gaze_pos_y'].values
 	vts = raw_df['vts_time'].values / 1000		# convert video timestamps from microseconds to ms
 
 	# read video file, create array of frame timestamps
 	frame_timestamps = getVidFrameTimestamps(join(input_dir, 'fullstream.mp4'))
-	frame_idx = np.arange(frame_timestamps.shape[0])
 
 	# use the frame timestamps to assign a frame number to each data point
 	frame_idx = np.zeros(data_ts.shape[0])
@@ -127,7 +135,7 @@ def formatGazeData(input_dir):
 
 	# build the formatted dataframe
 	gaze_df = pd.DataFrame({'timestamp':data_ts, 'confidence':confidence, 'frame_idx': frame_idx, 'norm_pos_x':norm_gazeX, 'norm_pos_y':norm_gazeY})
-	
+
 	# return the gaze data df and frame time stamps array
 	colOrder = ['timestamp', 'frame_idx', 'confidence', 'norm_pos_x', 'norm_pos_y']
 	return gaze_df[colOrder], frame_timestamps
@@ -140,7 +148,7 @@ def getVidFrameTimestamps(vid_file):
 	OPENCV3 = (cv2.__version__.split('.')[0] == '3')		# get opencv version
 
 	vid = cv2.VideoCapture(vid_file)
-	
+
 	# figure out the total number of frames in this video file
 	if OPENCV3:
 		totalFrames = vid.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -161,7 +169,7 @@ def getVidFrameTimestamps(vid_file):
 				thisFrameTS = vid.get(cv2.CAP_PROP_POS_MSEC)
 			else:
 				thisFrameTS = vid.get(cv2.cv.CV_CAP_PROP_POS_MSEC)
-			
+
 			# write this frame's ts to the array
 			frame_ts[frameCounter] = thisFrameTS
 
@@ -181,7 +189,7 @@ def json_to_df(json_file):
 	"""
 	# dicts to store sync points
 	vts_sync = {}			# RECORDED video timestamp sync
-	df = pd.DataFrame()     # empty dataframe to write data to 
+	df = pd.DataFrame()     # empty dataframe to write data to
 
 	with open(json_file, 'rb') as j:
 
@@ -194,7 +202,7 @@ def json_to_df(json_file):
 				vts_sync[entry['ts']] = entry['vts']
 				continue
 
-			# if this json object contains "eye" data (e.g. pupil info) 
+			# if this json object contains "eye" data (e.g. pupil info)
 			if 'eye' in entry.keys():
 				which_eye = entry['eye'][:1]
 				if 'pc' in entry.keys():
@@ -213,7 +221,7 @@ def json_to_df(json_file):
 					df.loc[entry['ts'], which_eye + '_gaze_dir_z'] = entry['gd'][2]
 					df.loc[entry['ts'], which_eye + '_gaze_dir_val'] = entry['s']
 					df.loc[entry['ts'], 'confidence'] = int(entry['s'] == 0)
-			
+
 			# otherwise it contains gaze position data
 			else:
 				if 'gp' in entry.keys():
@@ -232,14 +240,14 @@ def json_to_df(json_file):
 		# set video timestamps column
 		df['vts_time'] = np.array(df.index)	   # df.index is data timstamps
 		df.ix[df.index < min(sorted(vts_sync.keys())), 'vts_time'] = np.nan		# set rows that occur before the first frame to nan
-		
+
 		# for each new vts sync package, reindex all of the rows above that timestamp
 		for key in sorted(vts_sync.keys()):
 			df.ix[df.index >= key, 'vts_time'] = np.array(df.index)[df.index >= key]   # necessary if there are more than 2 keys in the list (prior key changes need to be reset for higher vts syncs)
 			df.ix[df.index >= key, 'vts_time'] = df.vts_time - key + vts_sync[key]
 
-		# note: the vts column indicates, in microseconds, where this datapoint would occur in the video timeline 
-		# these do NOT correspond to the timestamps of when the videoframes were acquired. Need cv2 methods for that. 
+		# note: the vts column indicates, in microseconds, where this datapoint would occur in the video timeline
+		# these do NOT correspond to the timestamps of when the videoframes were acquired. Need cv2 methods for that.
 
 		# add seconds column
 		df = df.reset_index()
@@ -265,4 +273,3 @@ if __name__ == '__main__':
 
 		# run preprocessing on this data
 		preprocessData(args.inputDir, args.outputDir)
-
