@@ -262,7 +262,7 @@ if __name__ == '__main__':
 	# parse arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('inputDir', help='path to the raw recording dir (e.g. SD card)')
-	parser.add_argument('outputDir', help='path to where output data copied and saved to')
+	parser.add_argument('outputRoot', help='path to where output data copied and saved to')
 	args = parser.parse_args()
 
 	# Check if input directory is valid
@@ -272,4 +272,4 @@ if __name__ == '__main__':
 	else:
 
 		# run preprocessing on this data
-		preprocessData(args.inputDir, args.outputDir)
+		preprocessData(args.inputDir, args.outputRoot)

@@ -1,11 +1,12 @@
 """
 step 2: processing
 
-This script will process data for the calibration task. Make sure to have completed step 1: preprocessing
+This script will map the preprocessed gaze data to the 3 different coordinate systems: world, border, and calibGrid. corresponding output movies will be created for each with the gaze position overlaid. An additional movie will show the
+
+step 1: preprocessing
 before starting. Preprocessing scripts vary by glasses model (check the specific glasses manufacturer directory).
 
-This script assumes preprocessing has been done, and regardless of glasses model, the data has been converted to
-a common format.
+This script assumes preprocessing has been done, and regardless of glasses model, the data has been converted to a common format.
 
 This script will copy the preprocessed data from the ./<manufacturer>/data directory to a new directory in ./data.
 The new directory will be named according to subj and condition.
@@ -33,6 +34,7 @@ import json
 import numpy as np
 import pandas as pd
 from os.path import join
+import cv2
 
 ### configuration vars
 border_path = '../referenceGrids/enhancedGrid.jpg'

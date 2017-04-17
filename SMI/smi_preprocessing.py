@@ -78,7 +78,7 @@ def copySMI_recording(inputDir, sessionNum, output_root):
 	# create the output directory:
 	outputDir = join(output_root, date_dir, time_dir)
 	if not os.path.isdir(outputDir):
-		os.makedirs(output_dir)
+		os.makedirs(outputDir)
 
 	# copy the relevant data to the new directory
 	for f in os.listdir(inputDir):
