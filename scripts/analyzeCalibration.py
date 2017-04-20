@@ -1,10 +1,10 @@
 """
 step 3: Analyze the Calibration performance for a given run
 
-Assumes processData.py has already been run. 
+Assumes processData.py has already been run.
 
-all of the output will be stored in a 'calibration' direction in ./data/<condition name>
-Output directory will contain the following files:
+all of the output will be stored in a 'calibration' directory (e.g. ./data/<condition name>/calibration).
+This directory will contain the following files:
 	- calibration_gazeData.tsv: all of the gaze data aligned with the calibration task trials
 	- calibration_summarized.tsv: a summary of calibration accuracy and precision on each calibration point
 	- calibrationPlot_raw.pdf: plot of all of the gaze data, colored by trial
@@ -40,17 +40,17 @@ calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
 pixPerDeg = {'1M': 85.8, '2M': 171.2, '3M': 256.7}
 
 # dict to store the fps of gaze data based on different glasses models
-gaze_fps = {'Tobii': 50, 'PL': 30, 'SMI':0000}
+gaze_fps = {'Tobii': 50, 'PL': 60, 'SMI': 60}
 
 def processCalibration(condition):
 	"""
-	process the calibration data for this condition. 
+	process the calibration data for this condition.
 	"""
 
 	# parse condition
 	subj, glasses, distance, offset = condition.split('_')
 
-	# store the maximum number of gazepts per trial under ideal conditons for these glasses
+	# store the maximum number of gazepts per trial based on the trial window and glasses sampling Hz
 	idealMaxGazePts = int((trialWin[1]-trialWin[0])/1000 * gaze_fps[glasses])
 
 	### set up inputs/outputs
@@ -94,7 +94,6 @@ def processCalibration(condition):
 	taskLog = pd.read_table(join(calibDir, (condition + '_taskLog.txt')))
 	calibGridDims = (taskLog.col.max(), taskLog.row.max())
 
-
 	### Loop through each calibration point
 	for i in range(taskLog.shape[0]):
 		# each point is pd.series object with entries for Col, Row, and Time
@@ -131,12 +130,12 @@ def processCalibration(condition):
 			# calculate gaze point distance/angle from the ideal location
 			idealLocation = ((1000/6)*thisPt.col, (1000/6)*thisPt.row)
 			trialGaze_df.loc[:, 'distance'] = trialGaze_df.apply(lambda d: getDistance(idealLocation[0],
-																						idealLocation[1], 
-																						d['calibGrid_gazeX'], 
+																						idealLocation[1],
+																						d['calibGrid_gazeX'],
 																						d['calibGrid_gazeY'],
 																						distance), axis=1)
-			trialGaze_df.loc[:, 'angle'] = trialGaze_df.apply(lambda d: getAngle(idealLocation[0], 
-																					idealLocation[1], 
+			trialGaze_df.loc[:, 'angle'] = trialGaze_df.apply(lambda d: getAngle(idealLocation[0],
+																					idealLocation[1],
 																					d['calibGrid_gazeX'],
 																					d['calibGrid_gazeY']), axis=1)
 
@@ -144,7 +143,6 @@ def processCalibration(condition):
 			trialGaze_df = trialGaze_df[trialGaze_df['distance'] < 5]
 
 			if trialGaze_df.shape[0] > 0:
-
 				### Summarize this trial ################################
 				# calculate percent of valid timepts
 				percentValid = trialGaze_df.shape[0]/idealMaxGazePts
@@ -160,14 +158,14 @@ def processCalibration(condition):
 				# calculate precision: RMS (root mean squared) of distance between each gazept and centroid
 				distFromCentroid = trialGaze_df.apply(lambda d: getDistance(centroidX,
 																			centroidY,
-																			d['calibGrid_gazeX'], 
+																			d['calibGrid_gazeX'],
 																			d['calibGrid_gazeY'],
 																			distance), axis=1)
 
 				RMS = np.sqrt(np.sum(np.square(distFromCentroid)) * (1/distFromCentroid.shape[0]))
 
 				# write all of this trial's data to a dataframe
-				trialSummary = pd.DataFrame({'trial': thisTrial, 
+				trialSummary = pd.DataFrame({'trial': thisTrial,
 												'ptIdx':ptIdx,
 												'percentValid':percentValid,
 												'centX':centroidX, 'centY':centroidY,
@@ -184,13 +182,13 @@ def processCalibration(condition):
 
 	### Write to text files
 	gazeCalibration_colOrder = ['trial', 'ptIdx', 'col', 'row', 'trial_ts', 'task_ts', 'gaze_ts',
-					'worldFrame', 'confidence', 
-					'world_gazeX', 'world_gazeY', 
-					'border_gazeX', 'border_gazeY', 
+					'worldFrame', 'confidence',
+					'world_gazeX', 'world_gazeY',
+					'border_gazeX', 'border_gazeY',
 					'calibGrid_gazeX', 'calibGrid_gazeY',
 					'distance', 'angle']
 	gazeCalibration_df[gazeCalibration_colOrder].to_csv(join(calibDir, 'gazeData_calibration.tsv'), sep='\t', index=False, float_format='%.3f')
-	summary_colOrder = ['trial', 'ptIdx', 'percentValid', 
+	summary_colOrder = ['trial', 'ptIdx', 'percentValid',
 						'centX', 'centY', 'centDist', 'centAngle', 'RMS']
 	allTrials_summarized[summary_colOrder].to_csv(join(calibDir, 'calibrationSummary.tsv'), sep='\t', index=False, float_format='%.3f')
 
@@ -245,7 +243,7 @@ def findMatches(img1_kp, img1_des, img2_kp, img2_des):
 		img2_pts = np.float32([img2_kp[i.trainIdx].pt for i in goodMatches])
 
 		return img1_pts, img2_pts
-	
+
 	else:
 		return None, None
 
@@ -255,7 +253,7 @@ def findStartFrame(vidPath):
 	find the first frame in the video in which the startImage appears
 	"""
 	OPENCV3 = (cv2.__version__.split('.')[0] == '3')
-	
+
 	# open vid file, set parameters
 	vid = cv2.VideoCapture(vidPath)
 	if OPENCV3:
@@ -324,9 +322,9 @@ def plotCalibrationGaze(gazeCalibration_df, condition, outputDir):
 	ax = fig.add_subplot(121)
 	ax.axis("off")
 	ax.imshow(gridImg, cmap='Greys_r', alpha=0.3)		# background img
-	ax.scatter(gazeCalibration_df.calibGrid_gazeX, gazeCalibration_df.calibGrid_gazeY, 
+	ax.scatter(gazeCalibration_df.calibGrid_gazeX, gazeCalibration_df.calibGrid_gazeY,
 				s=60, alpha=0.74, edgecolor='k', c=gazeCalibration_df.ptIdx, cmap='Vega20b')
-	
+
 	# set axis limits
 	ax.set_ylim(-250, 1250)
 	ax.set_xlim(-250, 1250)
@@ -334,7 +332,7 @@ def plotCalibrationGaze(gazeCalibration_df, condition, outputDir):
 
 	### Gaze pts on Polar Plot
 	ax2 = fig.add_subplot(122, polar=True)
-	ax2.set_ylim(0,5)			
+	ax2.set_ylim(0,5)
 	ax2.set_yticks([1,2,3])
 	ax2.yaxis.set_ticklabels(['1$^\circ$ ', '2$^\circ$ ', '3$^\circ$ '])		# for degree symbol
 
@@ -353,12 +351,12 @@ def plotCalibrationGaze(gazeCalibration_df, condition, outputDir):
 	plt.close()
 
 
-def plotCalibrationSummary(calibSummary_df, condition, outputDir): 
+def plotCalibrationSummary(calibSummary_df, condition, outputDir):
 	"""
 	plot the summary of gaze calibration for this subject
 	"""
 	gridImg = mpimg.imread(calibGrid_path)
-	
+
 	# axis formatting
 	matplotlib.rc('ytick', labelsize=20)
 	matplotlib.rc('xtick', labelsize=20)
@@ -374,9 +372,9 @@ def plotCalibrationSummary(calibSummary_df, condition, outputDir):
 	ax.scatter(calibSummary_df.centX, calibSummary_df.centY, s=60, c=calibSummary_df.ptIdx, cmap='Vega20b')
 
 	# rms as circle enclosing centroid location
-	ax.scatter(calibSummary_df.centX, calibSummary_df.centY, 
-				s=1000*calibSummary_df.RMS, 
-				c=calibSummary_df.ptIdx, 
+	ax.scatter(calibSummary_df.centX, calibSummary_df.centY,
+				s=1000*calibSummary_df.RMS,
+				c=calibSummary_df.ptIdx,
 				edgecolor='none',
 				cmap='Vega20b', alpha=0.5)
 
@@ -406,20 +404,20 @@ def plotCalibrationSummary(calibSummary_df, condition, outputDir):
 	ax2.set_ylim(0,5)
 	ax2.set_yticks([1,2,3])
 	ax2.yaxis.set_ticklabels(['1$^\circ$ ', '2$^\circ$ ', '3$^\circ$ '])		# for degree symbol
-	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)), 
-							calibSummary_df['centDist'].astype(float), 
-							s=150, 
-							edgecolor='black', 
-							c=calibSummary_df['ptIdx'], 
-							cmap='Vega20b', 
+	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)),
+							calibSummary_df['centDist'].astype(float),
+							s=150,
+							edgecolor='black',
+							c=calibSummary_df['ptIdx'],
+							cmap='Vega20b',
 							alpha=.74)
 	# rms
-	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)), 
-							calibSummary_df['centDist'].astype(float), 
-							s=1500*calibSummary_df.RMS, 
-							edgecolor='none', 
-							c=calibSummary_df['ptIdx'], 
-							cmap='Vega20b', 
+	ax2.scatter(np.deg2rad(calibSummary_df['centAngle'].astype(float)),
+							calibSummary_df['centDist'].astype(float),
+							s=1500*calibSummary_df.RMS,
+							edgecolor='none',
+							c=calibSummary_df['ptIdx'],
+							cmap='Vega20b',
 							alpha=.5)
 	ax2.scatter(0,0, s=2000, facecolor='black', alpha=.4)  # put circle at center for reference
 	ax2.spines['polar'].set_visible(False)

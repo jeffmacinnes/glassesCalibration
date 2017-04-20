@@ -6,41 +6,15 @@ import os
 from os.path import join
 import pandas as pd
 
-conditions = ['101_Tobii_1M_0deg',
-			'101_Tobii_1M_10Ldeg',
-			'101_Tobii_1M_10Rdeg',
-			'101_Tobii_2M_0deg',
-			'101_Tobii_2M_10Ldeg',
-			'101_Tobii_2M_10Rdeg',
-			'101_Tobii_3M_0deg',
-			'101_Tobii_3M_10Ldeg',
-			'101_Tobii_3M_10Rdeg',
-			'102_Tobii_1M_0deg',
-			'102_Tobii_1M_10Ldeg',
-			'102_Tobii_1M_10Rdeg',
-			'102_Tobii_2M_0deg',
-			'102_Tobii_2M_10Ldeg',
-			'102_Tobii_2M_10Rdeg',
-			'102_Tobii_3M_0deg',
-			'102_Tobii_3M_10Ldeg',
-			'102_Tobii_3M_10Rdeg',
-			'102_SMI_1M_0deg',
-			'102_SMI_1M_10Ldeg',
-			'102_SMI_1M_10Rdeg',
-			'102_SMI_2M_0deg',
-			'102_SMI_2M_10Ldeg',
-			'102_SMI_2M_10Rdeg',
-			'102_PupilLabs_1M_0deg',
-			'102_PupilLabs_1M_10Ldeg',
-			'102_PupilLabs_1M_10Rdeg',
-			'102_PupilLabs_2M_0deg',
-			'102_PupilLabs_2M_10Ldeg',
-			'102_PupilLabs_2M_10Rdeg']
-
-
-# conditions = ['101_Tobii_1M_0deg',
-# 			'101_Tobii_1M_10Ldeg']
-
+conditions = ['103_Tobii_1M_0deg',
+			'103_Tobii_1M_10Ldeg',
+			'103_Tobii_1M_10Rdeg',
+			'103_Tobii_2M_0deg',
+			'103_Tobii_2M_10Ldeg',
+			'103_Tobii_2M_10Rdeg',
+			'103_Tobii_3M_0deg',
+			'103_Tobii_3M_10Ldeg',
+			'103_Tobii_3M_10Rdeg']
 
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)
