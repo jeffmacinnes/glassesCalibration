@@ -37,6 +37,7 @@ trialWin = (500, 2500)
 calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
 
 # dict to store the pixels/deg visual angle on the calibration grid at various distances
+# The calibration grid is 1000px on edge, and 204mm on edge in the real world
 pixPerDeg = {'1M': 85.8, '2M': 171.2, '3M': 256.7}
 
 # dict to store the fps of gaze data based on different glasses models
@@ -107,14 +108,13 @@ def processCalibration(condition):
 		# figure out the index location of this point (counting from L->R, T->B)
 		ptIdx = (thisPt.row-1) * calibGridDims[0] + thisPt.col
 
-		# isolate the gaze data that corresponds to this pt only
-		trialGaze_df = gaze_df[(gaze_df.task_ts > trialStart) & (gaze_df.task_ts <= (trialStart + trialDur))]
-		print('HERE1')
-		print(trialGaze_df.columns)
+		# isolate the gaze data that corresponds to this pt only (return a copy of the gaze_df dataframe)
+		trialGaze_df = gaze_df[(gaze_df.task_ts > trialStart) & (gaze_df.task_ts <= (trialStart + trialDur))].copy()
+
 		# Insert col of timestamps relative to the trial onset
-		trialGaze_df.assign(trial_ts = lambda x: x.task_ts - trialStart)
-		#trialGaze_df['trial_ts'] = trialGaze_df.task_ts - trialStart
-		print('HERE2')
+		# trialGaze_df.assign(trial_ts = lambda x: x.task_ts - trialStart)
+		# print(trialGaze_df.columns)
+		trialGaze_df['trial_ts'] = trialGaze_df.task_ts - trialStart
 
 		# isolate the trial data to only those timepoints that fall within the specified analysis window
 		trialGaze_df = trialGaze_df[(trialGaze_df.trial_ts > trialWin[0]) & (trialGaze_df.trial_ts <= trialWin[1])]
@@ -138,6 +138,13 @@ def processCalibration(condition):
 																					idealLocation[1],
 																					d['calibGrid_gazeX'],
 																					d['calibGrid_gazeY']), axis=1)
+
+
+			# Add this trial's data to the master dataframe for all trials
+			if 'gazeCalibration_df' not in locals():
+				gazeCalibration_df = trialGaze_df.copy()
+			else:
+				gazeCalibration_df = pd.concat([gazeCalibration_df, trialGaze_df], join='outer', ignore_index=True)
 
 			# drop datapts where the distance is more than 5 deg of visual angle away from calib pt
 			trialGaze_df = trialGaze_df[trialGaze_df['distance'] < 5]
@@ -171,14 +178,20 @@ def processCalibration(condition):
 												'centX':centroidX, 'centY':centroidY,
 												'RMS':RMS,
 												'centDist':centDist, 'centAngle':centAngle}, index=[0])
+			else:
+				# if no datapts are less than 5 deg away from where they should be, write Nans
+				trialSummary = pd.DataFrame({'trial': thisTrial,
+												'ptIdx':ptIdx,
+												'percentValid':0,
+												'centX':np.nan, 'centY':np.nan,
+												'RMS':np.nan,
+												'centDist':np.nan, 'centAngle':np.nan}, index=[0])
 
-				# add this trial summary to the master dataframe for all trials
-				if 'gazeCalibration_df' not in locals():
-					gazeCalibration_df = trialGaze_df.copy()
-					allTrials_summarized = trialSummary.copy()
-				else:
-					gazeCalibration_df = pd.concat([gazeCalibration_df, trialGaze_df], join='outer', ignore_index=True)
-					allTrials_summarized = pd.concat([allTrials_summarized, trialSummary], join='outer', ignore_index=True)
+			# add this trial summary to the master dataframe for all trials
+			if 'allTrials_summarized' not in locals():
+				allTrials_summarized = trialSummary.copy()
+			else:
+				allTrials_summarized = pd.concat([allTrials_summarized, trialSummary], join='outer', ignore_index=True)
 
 	### Write to text files
 	gazeCalibration_colOrder = ['trial', 'ptIdx', 'col', 'row', 'trial_ts', 'task_ts', 'gaze_ts',

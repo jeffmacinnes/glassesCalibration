@@ -1,11 +1,11 @@
 import os
 from os.path import join
-import pandas as pd 
+import pandas as pd
 
 # conditions
-sessions = [4,5,6,7,8,9,10,11]
+sessions = [2,3,4]
 
-raw_dir = './data/raw/5-53'
+raw_dir = './data/raw/3-36'
 output_dir = './data'
 
 for s in sessions:
@@ -15,4 +15,3 @@ for s in sessions:
 		os.system(cmd_str)
 	except:
 		print('failed on: {}'.format(cmd_str))
-
