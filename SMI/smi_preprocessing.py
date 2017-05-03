@@ -173,6 +173,7 @@ def getVidFrameTimestamps(vid_file):
 	else:
 		totalFrames = vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
 	frame_ts = np.zeros(int(totalFrames))
+	print(totalFrames)
 
 	# loop through all video frames
 	frameCounter = 0
@@ -192,6 +193,7 @@ def getVidFrameTimestamps(vid_file):
 
 			# increment frame counter
 			frameCounter += 1
+			print(frameCounter, end=',')
 		else:
 			break
 	vid.release()		# close the video

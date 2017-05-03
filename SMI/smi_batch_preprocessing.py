@@ -3,9 +3,9 @@ from os.path import join
 import pandas as pd
 
 # conditions
-sessions = [2,3,4]
+sessions = [1,2,3,4,5,6,7,8,9]
 
-raw_dir = './data/raw/3-36'
+raw_dir = './data/raw/1-26'
 output_dir = './data'
 
 for s in sessions:
