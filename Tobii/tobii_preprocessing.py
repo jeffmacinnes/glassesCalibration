@@ -51,7 +51,7 @@ def preprocessData(inputDir, output_root):
 
 	### compress movie
 	print('Compressing movie file...')
-	cmd_str = ' '.join(['ffmpeg', '-i', join(newDataDir, 'fullstream.mp4'), '-pix_fmt', 'yuv420p', join(newDataDir, 'worldCamera.mp4')])
+	cmd_str = ' '.join(['ffmpeg', '-r 25', '-i', join(newDataDir, 'fullstream.mp4'), '-pix_fmt', 'yuv420p', join(newDataDir, 'worldCamera.mp4')])
 	os.system(cmd_str)
 
 	### cleanup

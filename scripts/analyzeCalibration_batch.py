@@ -7,8 +7,8 @@ from os.path import join
 import pandas as pd
 
 conditions = []
-for subj in ['101', '102', '103']:
-	for glasses in ['Tobii', 'SMI']:
+for subj in ['102', '103']:
+	for glasses in ['SMI']:
 		for dist in ['1M', '2M', '3M']:
 			for offset in ['0deg', '10Ldeg', '10Rdeg']:
 				thisCond = '_'.join([subj, glasses, dist, offset])

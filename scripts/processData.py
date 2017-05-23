@@ -173,6 +173,9 @@ def processRecording(condition):
 		fps = vid.get(cv2.CAP_PROP_FPS)
 		vidCodec = cv2.VideoWriter_fourcc(*'mp4v')
 		featureDetect = cv2.xfeatures2d.SIFT_create()
+
+		print(totalFrames, end=', ')
+		print(fps)
 	else:
 		totalFrames = vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
 		vidSize = (int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)), int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)))
@@ -223,6 +226,10 @@ def processRecording(condition):
 
 	frameProcessing_startTime = time.time()
 	frameCounter = 0
+
+	# error debugging
+	logFile = open(join(procDir, 'processing_log.txt'), 'w')
+
 	while vid.isOpened():
 		# read the next frame of the video
 		ret, frame = vid.read()
@@ -281,6 +288,14 @@ def processRecording(condition):
 					else:
 						dotColor = [168, 231, 86]			# minty green
 						dotSize = 8
+
+					# error checking
+					if ((int(border_gazeX) > 800) | (int(border_gazeX) < 0)):
+						logFile.write('border x exceeds width: {} on frame {} \n'.format(border_gazeX, frameNum))
+					if ((int(border_gazeY) > 1200) | (int(border_gazeY) < 0)):
+						logFile.write('border y exceeds height: {} on frame {} \n'.format(border_gazeY, frameNum))
+
+
 					cv2.circle(frame, (int(world_gazeX), int(world_gazeY)), dotSize, dotColor, -1)						# world frame
 					cv2.circle(border_frame, (int(border_gazeX), int(border_gazeY)),  dotSize, dotColor, -1)				# border frame
 					cv2.circle(calibGrid_frame, (int(calibGrid_gazeX), int(calibGrid_gazeY)),  dotSize, dotColor, -1)	# calibGrid frame
@@ -309,9 +324,13 @@ def processRecording(condition):
 				colOrder = ['worldFrame', 'gaze_ts', 'confidence',
 							'world_gazeX', 'world_gazeY', 'border_gazeX', 'border_gazeY', 'calibGrid_gazeX', 'calibGrid_gazeY']
 				gazeMapped_df[colOrder].to_csv(join(procDir, 'gazeData_mapped.tsv'), sep='\t', index=False, float_format='%.3f')
-			except:
+			except Exception as e:
+				print(e)
 				print('cound not write gazeData_mapped to csv')
 				pass
+
+			# close the logFile
+			logFile.close()
 
 	endTime = time.time()
 	frameProcessing_time = endTime - frameProcessing_startTime
