@@ -1,10 +1,10 @@
 """
-Format raw Pupil Labs data. 
+Format raw Pupil Labs data.
 
 Tested with Python 3.6, open CV 3.2
 
-The raw input data will be copied to a new directory stored in ./data. 
-The output directory will be  named according to [mo-day-yr]/[hr-min-sec] of the original creation time format. 
+The raw input data will be copied to a new directory stored in ./data.
+The output directory will be  named according to [mo-day-yr]/[hr-min-sec] of the original creation time format.
 
 The output directory will contain:
 	- worldCamera.mp4: the video from the point-of-view scene camera on the glasses
@@ -25,14 +25,11 @@ import pandas as pd
 import csv
 from itertools import chain
 
-try:
-	import cPickle as pickle
-except ImportError:
-	import pickle
-
+import gc
+import msgpack
 
 def preprocessData(inputDir, output_root):
-	""" 
+	"""
 	Run all preprocessing steps for pupil lab data
 	"""
 	### Prep output directory
@@ -67,10 +64,10 @@ def preprocessData(inputDir, output_root):
 							"norm_pos_x",
 							"norm_pos_y"))
 		for g in list(chain(*gazeData_world[export_range])):
-			data = ['{}'.format(g["timestamp"]*1000), 
-								g["frame_idx"], 
-								g["confidence"],  
-								g["norm_pos"][0], 
+			data = ['{}'.format(g["timestamp"]*1000),
+								g["frame_idx"],
+								g["confidence"],
+								g["norm_pos"][0],
 								g["norm_pos"][1]]  # use str on timestamp to be consitant with csv lib.
 			csv_writer.writerow(data)
 
@@ -79,7 +76,7 @@ def preprocessData(inputDir, output_root):
 	frame_ts_df = pd.DataFrame({'frameNum': frameNum, 'timestamp':frame_timestamps})
 	frame_ts_df.to_csv(join(outputDir, 'frame_timestamps.tsv'), sep='\t', float_format='%.3f', index=False)
 
-	### Compress and Move the world camera movie to the output 
+	### Compress and Move the world camera movie to the output
 	print('copying world recording movie...')
 	if not 'worldCamera.mp4' in os.listdir(outputDir):
 		# compress
@@ -100,11 +97,14 @@ def formatGazeData(inputDir):
 
 	# load pupil data
 	pupil_data_path = join(inputDir, 'pupil_data')
-	try:
-		with open(pupil_data_path, 'rb') as fh:
-			pupil_data = pickle.load(fh, encoding='bytes')
-	except pickle.UnpicklingError:
-		raise ValueError
+	with open(pupil_data_path, 'rb') as fh:
+		try:
+			gc.disable()
+			pupil_data = msgpack.unpack(fh, encoding='utf-8')
+		except Exception as e:
+			print(e)
+		finally:
+			gc.enable()
 	gaze_list = pupil_data['gaze_positions']   # gaze posiiton (world camera)
 
 	# load timestamps
@@ -113,7 +113,7 @@ def formatGazeData(inputDir):
 
 	# align gaze with world camera timestamps
 	gaze_by_frame = correlate_data(gaze_list, frame_timestamps)
-	
+
 	# make frame_timestamps relative to the first data timestamp
 	start_timeStamp = gaze_by_frame[0][0]['timestamp']
 	frame_timestamps = (frame_timestamps - start_timeStamp) * 1000 # convert to ms
@@ -180,7 +180,3 @@ if __name__ == '__main__':
 
 		# run preprocessing on this data
 		preprocessData(args.inputDir, args.outputDir)
-
-
-
-
