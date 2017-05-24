@@ -295,7 +295,6 @@ def processRecording(condition):
 					if ((int(border_gazeY) > 1200) | (int(border_gazeY) < 0)):
 						logFile.write('border y exceeds height: {} on frame {} \n'.format(border_gazeY, frameNum))
 
-
 					cv2.circle(frame, (int(world_gazeX), int(world_gazeY)), dotSize, dotColor, -1)						# world frame
 					cv2.circle(border_frame, (int(border_gazeX), int(border_gazeY)),  dotSize, dotColor, -1)				# border frame
 					cv2.circle(calibGrid_frame, (int(calibGrid_gazeX), int(calibGrid_gazeY)),  dotSize, dotColor, -1)	# calibGrid frame
