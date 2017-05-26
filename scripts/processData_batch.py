@@ -6,15 +6,19 @@ import os
 from os.path import join
 import pandas as pd
 
-conditions = ['102_SMI_1M_0deg',
-			'102_SMI_1M_10Ldeg',
-			'102_SMI_1M_10Rdeg',
-			'102_SMI_2M_0deg',
-			'102_SMI_2M_10Ldeg',
-			'102_SMI_2M_10Rdeg',
-			'102_SMI_3M_0deg',
-			'102_SMI_3M_10Ldeg',
-			'102_SMI_3M_10Rdeg']
+conditions = ['101_PupilLabs_1M_0deg',
+				'101_PupilLabs_1M_10Ldeg',
+				'101_PupilLabs_1M_10Rdeg',
+				'101_PupilLabs_2M_0deg',
+				'102_PupilLabs_1M_0deg',
+				'102_PupilLabs_1M_10Ldeg',
+				'102_PupilLabs_1M_10Rdeg',
+				'102_PupilLabs_2M_0deg',
+				'102_PupilLabs_2M_10Ldeg',
+				'102_PupilLabs_2M_10Rdeg',
+				'102_PupilLabs_3M_0deg',
+				'102_PupilLabs_3M_10Ldeg',
+				'102_PupilLabs_3M_10Rdeg']
 
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)
@@ -26,11 +30,11 @@ metadata_df['condition'] = metadata_df['Subj'].map(str) + '_' + metadata_df['Gla
 for cond in conditions:
 
 	print('Submitting job for: {}'.format(cond))
-	
+
 	thisRow = metadata_df.loc[metadata_df.condition == cond]
 	preprocDir = join('..', thisRow.Glasses.iloc[0], 'data', thisRow.Date.iloc[0])
 	print(preprocDir)
-	
+
 	try:
 		cmd_str = 'python processData.py ' + preprocDir + ' ' + cond
 		os.system(cmd_str)

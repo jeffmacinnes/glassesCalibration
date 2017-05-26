@@ -41,7 +41,7 @@ calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
 pixPerDeg = {'1M': 85.8, '2M': 171.2, '3M': 256.7}
 
 # dict to store the fps of gaze data based on different glasses models
-gaze_fps = {'Tobii': 50, 'PL': 60, 'SMI': 60}
+gaze_fps = {'Tobii': 50, 'PupilLabs': 60, 'SMI': 60}
 
 def processCalibration(condition):
 	"""
@@ -84,6 +84,7 @@ def processCalibration(condition):
 
 	### find the timestamp of the start image
 	gazeWorld_df = pd.read_table(join(dataDir, 'gazeData_world.tsv'), sep='\t')
+	print(startFrameNum)
 	startImage_df = gazeWorld_df[gazeWorld_df.frame_idx == (startFrameNum-1)].iloc[0]
 	taskStartTime = startImage_df.timestamp
 

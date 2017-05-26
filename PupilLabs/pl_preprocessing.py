@@ -42,6 +42,8 @@ def preprocessData(inputDir, output_root):
 			if 'Start Time' in line:
 				startTime = datetime.strptime(line.split(',')[1].strip('\n'), '%H:%M:%S')
 				time_dir = startTime.strftime('%H-%M-%S')
+			if 'World Camera Resolution' in line:
+				worldCamRes_y = int(line.split(',')[1].split('x')[1].strip('\n'))
 
 	# create the output directory (if necessary)
 	outputDir = join(output_root, date_dir, time_dir)
@@ -57,18 +59,18 @@ def preprocessData(inputDir, output_root):
 	csv_file = join(outputDir, 'gazeData_world.tsv')
 	export_range = slice(0, len(gazeData_world))
 	with open(csv_file, 'w', encoding='utf-8', newline='') as csvfile:
-		csv_writer = csv.writer(csvfile, delimiter='\t')
-		csv_writer.writerow(("timestamp",
+		csv_writer = csv.writer(csvfile, quoting=csv.QUOTE_NONE)
+		csv_writer.writerow(['{}\t{}\t{}\t{}\t{}'.format("timestamp",
 							"frame_idx",
 							"confidence",
 							"norm_pos_x",
-							"norm_pos_y"))
+							"norm_pos_y")])
 		for g in list(chain(*gazeData_world[export_range])):
-			data = ['{}'.format(g["timestamp"]*1000),
+			data = ['{:.3f}\t{:d}\t{:.1f}\t{:.3f}\t{:.3f}'.format(g["timestamp"]*1000,
 								g["frame_idx"],
 								g["confidence"],
 								g["norm_pos"][0],
-								g["norm_pos"][1]]  # use str on timestamp to be consitant with csv lib.
+								1-g["norm_pos"][1])]  # translate y coord to origin in top-left
 			csv_writer.writerow(data)
 
 	# write the frametimestamps to a csv file
