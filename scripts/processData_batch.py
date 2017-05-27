@@ -6,19 +6,21 @@ import os
 from os.path import join
 import pandas as pd
 
-conditions = ['101_PupilLabs_1M_0deg',
-				'101_PupilLabs_1M_10Ldeg',
-				'101_PupilLabs_1M_10Rdeg',
-				'101_PupilLabs_2M_0deg',
-				'102_PupilLabs_1M_0deg',
-				'102_PupilLabs_1M_10Ldeg',
-				'102_PupilLabs_1M_10Rdeg',
-				'102_PupilLabs_2M_0deg',
-				'102_PupilLabs_2M_10Ldeg',
-				'102_PupilLabs_2M_10Rdeg',
-				'102_PupilLabs_3M_0deg',
-				'102_PupilLabs_3M_10Ldeg',
-				'102_PupilLabs_3M_10Rdeg']
+conditions = ['101_PupilLabs_2M_0deg',
+				'101_PupilLabs_2M_10Ldeg',
+				'101_PupilLabs_2M_10Rdeg',
+				'101_PupilLabs_3M_0deg',
+				'101_PupilLabs_3M_10Ldeg',
+				'101_PupilLabs_3M_10Rdeg',
+				'103_PupilLabs_1M_0deg',
+				'103_PupilLabs_1M_10Ldeg',
+				'103_PupilLabs_1M_10Rdeg',
+				'103_PupilLabs_2M_0deg',
+				'103_PupilLabs_2M_10Ldeg',
+				'103_PupilLabs_2M_10Rdeg',
+				'103_PupilLabs_3M_0deg',
+				'103_PupilLabs_3M_10Ldeg',
+				'103_PupilLabs_3M_10Rdeg']
 
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)

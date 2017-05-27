@@ -173,9 +173,6 @@ def processRecording(condition):
 		fps = vid.get(cv2.CAP_PROP_FPS)
 		vidCodec = cv2.VideoWriter_fourcc(*'mp4v')
 		featureDetect = cv2.xfeatures2d.SIFT_create()
-
-		print(totalFrames, end=', ')
-		print(fps)
 	else:
 		totalFrames = vid.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
 		vidSize = (int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)), int(vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)))
