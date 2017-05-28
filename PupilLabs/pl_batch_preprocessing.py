@@ -4,8 +4,8 @@ import pandas as pd
 
 
 # conditions
-sessions = [0,2,3,4,5,6,7,10,11,12,13,14,15]
-raw_dir = './data/raw/2017_05_25'
+sessions = [0,2,3,4,5,6,8,12,13,15,18,20,21,23,24,26]
+raw_dir = './data/raw/2017_05_26'
 output_dir = './data'
 
 for s in sessions:

@@ -22,6 +22,10 @@ conditions = ['101_PupilLabs_2M_0deg',
 				'103_PupilLabs_3M_10Ldeg',
 				'103_PupilLabs_3M_10Rdeg']
 
+conditions = 	['103_PupilLabs_1M_0deg',
+				'103_PupilLabs_1M_10Ldeg',
+				'103_PupilLabs_1M_10Rdeg']
+
 # load the metadata table
 metadata_df = pd.read_table(join('../data', 'metadataTable.txt'), sep='\t', header=0)
 
