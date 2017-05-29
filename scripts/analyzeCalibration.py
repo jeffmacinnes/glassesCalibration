@@ -41,7 +41,7 @@ calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
 pixPerDeg = {'1M': 85.8, '2M': 171.2, '3M': 256.7}
 
 # dict to store the fps of gaze data based on different glasses models
-gaze_fps = {'Tobii': 50, 'PupilLabs': 60, 'SMI': 60}
+gaze_fps = {'Tobii': 50, 'PupilLabs': 120, 'SMI': 60}
 
 def processCalibration(condition):
 	"""
