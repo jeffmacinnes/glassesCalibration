@@ -84,7 +84,6 @@ def processCalibration(condition):
 
 	### find the timestamp of the start image
 	gazeWorld_df = pd.read_table(join(dataDir, 'gazeData_world.tsv'), sep='\t')
-	print(startFrameNum)
 	startImage_df = gazeWorld_df[gazeWorld_df.frame_idx == (startFrameNum-1)].iloc[0]
 	taskStartTime = startImage_df.timestamp
 
@@ -223,8 +222,15 @@ def getDistance(x1,y1,x2,y2, distance):
 def getAngle(x1,y1,x2,y2):
 	# calculate vector angle between two points
 	xDist = x2-x1
-	yDist = (y2-y1)
-	return 360-np.rad2deg(np.arctan2(yDist,xDist))
+	yDist = (y2-y1) * -1   # invert to account for screen origin in top, left
+	
+	# calculate the angle between (x1,y1) and (x2,y2)
+	# note: angle will be between 0-180 deg, sign indicates above or below x-axis
+	angle = np.rad2deg(np.arctan2(yDist,xDist))
+	if angle < 0:
+		angle = 360-(-angle)
+
+	return angle
 
 
 def findMatches(img1_kp, img1_des, img2_kp, img2_des):

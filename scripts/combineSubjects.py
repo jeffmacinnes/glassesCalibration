@@ -22,6 +22,9 @@ for subj in ['101', '102', '103']:
                 calibSummary_path = join(data_dir, thisCond, 'calibration/calibrationSummary.tsv')
                 calibSummary_df = pd.read_table(calibSummary_path, sep='\t')
 
+                # take the mean across all pts
+                # calibSummary_df = calibSummary_df.mean()
+
                 # add condition cols to the summmary
                 calibSummary_df['subj'] = subj
                 if glasses == 'PupilLabs':
@@ -31,6 +34,10 @@ for subj in ['101', '102', '103']:
                 calibSummary_df['glasses'] = model
                 calibSummary_df['dist'] = dist
                 calibSummary_df['offset'] = offset
+
+                calibSummary_df['condition'] = thisCond
+
+                print(calibSummary_df)
 
                 # combine this file with the master
                 if 'allSubjs_df' not in locals():
