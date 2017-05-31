@@ -37,8 +37,6 @@ for subj in ['101', '102', '103']:
 
                 calibSummary_df['condition'] = thisCond
 
-                print(calibSummary_df)
-
                 # combine this file with the master
                 if 'allSubjs_df' not in locals():
                     allSubjs_df = calibSummary_df.copy()
