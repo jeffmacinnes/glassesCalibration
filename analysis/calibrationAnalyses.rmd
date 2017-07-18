@@ -1,0 +1,39 @@
+---
+title: "Wearable Eye-tracker Calibration Analyses"
+author: "jeff macinnes"
+date: "July 17, 2017"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Wearable Eye-tracker Calibration Analyses
+
+A set of analyses comparing calibration performance across 3 different models of wearable eye-trackers: Tobii Glasses 2, SMI, and Pupil Labs. Each tracker was tested on 3 different subjects. Each subject performed calibration tasks at 3 different distances (1M, 2M, and 3M). At each distance, calibration was tested at 3 different conditons of visual angle offset (-10deg, 0deg, +10deg). The calibration task consisted of asking participants to fixate on a sequence of 9 calibration points (3 x 3 grid) presented in a random order for 3 seconds each. The analysis focuses on the gaze data collected between 500ms and 2500ms on each point.
+
+## Read in processed calibration data file
+Each row represents the calibration performance summary for one pt (of 9) for one conditon for one subject. 
+
+```{r chunk1, message=FALSE}
+library(readr)
+library(knitr)
+
+calibData <- read_delim("allSubjs_calibrationSummary.tsv", delim="\t")
+kable(calibData[1:5,], caption='Calibration Data, all subjects')
+```
+
+## Average by condition
+Each condition (i.e. calibration task at a given distance and given offset) contained 9 distinct calibration points. As a first step, average calibration performance across all 9 pts for each condition.
+
+```{r} 
+print("test")
+```
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

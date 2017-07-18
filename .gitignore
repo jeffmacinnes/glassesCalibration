@@ -1,6 +1,7 @@
 # File Types
 *.DS_store
 *.py[cod]
+*~
 
 # Directories
 */data/
