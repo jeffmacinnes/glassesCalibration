@@ -9,6 +9,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(warning=FALSE)
 ```
 
 # Wearable Eye-tracker Calibration Analyses
@@ -47,7 +49,7 @@ The calibData dataframe has summarized each individual calibration pt (9 total) 
 # load dplyr library
 library(dplyr)
 
-# use piping syntax to group by unique conditions, and take the mean of all numeric columns
+# group by unique conditions, and take the mean of all numeric columns
 dat <- calibData %>% 
   group_by(subj, glasses, dist, offset) %>%
   summarise_if(is.numeric, mean)
@@ -59,9 +61,12 @@ dat <- dat %>% select(-one_of(c("trial", "ptIdx")))
 kable(dat[1:5,], caption='Calibration data, mean by unique condition')
 ```
 
-# Models
+# Models  
+
 ---
-## Overall 
+## Overall  
+Collapsing across all conditions (distance and visual angle offset)
+
 #### Accuracy
 Test if there's an overall effect of glasses model on accuracy (i.e. centDist). Collapsing across all distance and offset, with subject as a random effect
 
@@ -75,29 +80,113 @@ overallAcc <- lmer(centDist ~ glasses + (1|subj), data=dat)
 summary(overallAcc)
 
 anova(overallAcc)
+
+
 ```
 
-Glasses model is a significant predictor of overall accuracy. Next, run post-hocs to look for significant differences between glasses
+Glasses model is a significant predictor of overall accuracy. Next, run post-hocs to look for significant differences between glasses. (Methods for running pairwise t-tests on linear model object found at: https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model)
 
 ```{r}
 library(multcomp)
 summary(glht(overallAcc, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
 ```
 
+Pupil Labs show significantly better Accuracy than either SMI or Tobii. No significant difference between SMI and Tobii
+
+#### Precision
+Test if there's an overall effect of glasses model on precision (i.e. RMS). Collapsing across all distance and offset, with subject as a random effect
 
 
-**Precision**
-Run the same model looking at precision (i.e. RMS)
+```{r chunk4}
+# build a linear mixed effects model predicting RMS as a function of glasses, with subj as a random effect
+overallPrec <- lmer(RMS ~ glasses + (1|subj), data=dat)
+summary(overallPrec)
+
+anova(overallPrec)
+
+```
+
+Glasses model is a significant predictor of overall precision. Run Post hoc t-tests to make comparisons between models
+
+```{r chunk5}
+summary(glht(overallPrec, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
+
+```
+
+Tobii exhibits significantly different precision than either SMI or Pupil Labs. No significant difference between SMI and Pupil Labs. 
+
+#### Overall Accuracy and Precision Plots
+
+```{r chunk6}
+# overall Accuracy plot
+library(ggplot2)
+library(ggthemes)
+library(ggpubr)
+
+## Accuracy
+accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses), 
+       data = dat) +
+  geom_boxplot() +
+  labs( 
+    x = "Wearable Eye-tracker",
+    y = "Visual Angle (deg)",
+    title="Accuracy"
+    ) +
+  scale_fill_brewer(palette="Greens") +
+  scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
+  theme(
+    aspect.ratio = 1.5,
+    panel.background = element_blank(),
+    plot.title = element_text(hjust=.5, size=18),
+    axis.title = element_text(size=rel(1.3)),
+    axis.text.x = element_text(size = rel(1.3)),
+    axis.text.y = element_text(size = rel(1.5)),
+    axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
+    axis.ticks.x = element_blank(),
+    panel.grid.major.y = element_line(colour="darkgrey", linetype = "twodash", size=.25),
+    legend.position = "none",
+  ) +
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25)
 
 
+## Precision
+rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses), 
+                  data = dat) +
+  geom_boxplot() +
+  labs( 
+    x = "Wearable Eye-tracker",
+    y = "RMS",
+    title="Precision"
+  ) +
+  scale_fill_brewer(palette="Greens") +
+  scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
+  theme(
+    aspect.ratio = 1.5,
+    panel.background = element_blank(),
+    plot.title = element_text(hjust=.5, size=18),
+    axis.title = element_text(size=rel(1.3)),
+    axis.text.x = element_text(size = rel(1.3)),
+    axis.text.y = element_text(size = rel(1.5)),
+    axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
+    axis.ticks.x = element_blank(),
+    panel.grid.major.y = element_line(colour="darkgrey", linetype = "twodash", size=.25),
+    legend.position = "none",
+  ) +
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25)
 
-	- Baseline condition (2m distance, 0 deg offset)
-		- accuracy x glasses model
-		- precision x glasses model
+## Combine plots
+ggarrange(accPlot, rmsPlot,  
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1) + 
+  ggsave("figs/overallAccPrec.pdf", width = 8, height = 5)
+```
 
-	- Overall (avg across all distance and offset conditions)
-		- accuracy x glasses model
-		- precision x glasses model
+
+** Models to run **  
+
+	- ~~Overall (avg across all distance and offset conditions)~~
+		- ~~accuracy x glasses model~~
+		- ~~precision x glasses model~~
 
 	- Distance (fixed offset, 0deg)
 		- accuracy x distance x glasses model
@@ -108,7 +197,8 @@ Run the same model looking at precision (i.e. RMS)
 		- precision x distance x offset x glasses model
 
 
-## Session Info
+## Session Info  
+Display all session info (R and R package version numbers)
 ```{r}
 sessionInfo()
 ```
