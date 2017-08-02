@@ -78,24 +78,26 @@ Table: Calibration data, mean by unique condition
   101  Pupil Labs   2M     0deg         0.9924444   338.9074   381.4510   1.178778   143.40244   0.0801111
   101  Pupil Labs   2M     10Ldeg       0.9901111   188.1186   499.2804   1.841111   179.78633   0.1026667
 
-# Models  
+
+
+# Model the data  
 
 ---
-## Overall  
-Collapsing across all conditions (distance and visual angle offset)
+## Overall
+
+Collapsing across all conditions, is glasses model a significant predictor of accuracy or precision? Fit a linear mixed-effects model with glasses (fixed effect) and subject (random effect).
 
 #### Accuracy
-Test if there's an overall effect of glasses model on accuracy (i.e. centDist). Collapsing across all distance and offset, with subject as a random effect
 
 
 ```r
-# load the nlme packages, which includes functions for fitting mixed models
+# load the lme4 packages, which includes functions for fitting mixed models
 library(lme4)
 library(lmerTest)
 
-# build a linear mixed effects model predicting centDist as a function of glasses, with subj as a random effect
-overallAcc <- lmer(centDist ~ glasses + (1|subj), data=dat)
-summary(overallAcc)
+# build linear mixed effects model predicting accuracy (i.e. centDist) 
+accMod.overall <- lmer(centDist ~ glasses + (1|subj), data=dat)
+summary(accMod.overall)
 ```
 
 ```
@@ -131,7 +133,7 @@ summary(overallAcc)
 ```
 
 ```r
-anova(overallAcc)
+anova(accMod.overall)
 ```
 
 ```
@@ -143,12 +145,13 @@ anova(overallAcc)
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-Glasses model is a significant predictor of overall accuracy. Next, run post-hocs to look for significant differences between glasses. (Methods for running pairwise t-tests on linear model object found at: https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model)
+Glasses Model is a significant predictor of accuracy. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models. (Methods for running pairwise t-tests on linear model object found at: https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model)
 
 
 ```r
 library(multcomp)
-summary(glht(overallAcc, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
+
+summary(glht(accMod.overall, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
 ```
 
 ```
@@ -170,17 +173,17 @@ summary(glht(overallAcc, linfct = mcp(glasses = "Tukey")), test = adjusted("holm
 ## (Adjusted p values reported -- holm method)
 ```
 
-Pupil Labs show significantly better Accuracy than either SMI or Tobii. No significant difference between SMI and Tobii
+Overall, there is a significant difference in accuracy between Pupil Labs and SMI, and Pupil Labs and Tobii. No significant different between SMI and Tobii. 
 
 #### Precision
-Test if there's an overall effect of glasses model on precision (i.e. RMS). Collapsing across all distance and offset, with subject as a random effect
-
-
+ Fit a similar linear mixed-effects model looking at precision instead of accuracy
+ 
+ 
 
 ```r
-# build a linear mixed effects model predicting RMS as a function of glasses, with subj as a random effect
-overallPrec <- lmer(RMS ~ glasses + (1|subj), data=dat)
-summary(overallPrec)
+# build linear mixed effects model predicting precision (i.e. RMS) 
+precMod.overall <- lmer(RMS ~ glasses + (1|subj), data=dat)
+summary(precMod.overall)
 ```
 
 ```
@@ -216,7 +219,7 @@ summary(overallPrec)
 ```
 
 ```r
-anova(overallPrec)
+anova(precMod.overall)
 ```
 
 ```
@@ -228,11 +231,11 @@ anova(overallPrec)
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-Glasses model is a significant predictor of overall precision. Run Post hoc t-tests to make comparisons between models
+Glasses model is a significant predictor of overall precision. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models.
 
 
 ```r
-summary(glht(overallPrec, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
+summary(glht(precMod.overall, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
 ```
 
 ```
@@ -253,10 +256,11 @@ summary(glht(overallPrec, linfct = mcp(glasses = "Tukey")), test = adjusted("hol
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## (Adjusted p values reported -- holm method)
 ```
-
-Tobii exhibits significantly different precision than either SMI or Pupil Labs. No significant difference between SMI and Pupil Labs. 
+Tobii exhibits significantly different precision than either SMI or Pupil Labs. No significant difference between SMI and Pupil Labs.
 
 #### Overall Accuracy and Precision Plots
+
+Plot Accuracy and Precision by Glasses Model
 
 
 ```r
@@ -323,24 +327,32 @@ ggarrange(accPlot, rmsPlot,
   ggsave("figs/overallAccPrec.pdf", width = 8, height = 5)
 ```
 
-![](calibrationAnalyses_files/figure-html/chunk6-1.png)<!-- -->
+![](calibrationAnalyses_files/figure-html/chunk7-1.png)<!-- -->
 
 
-** Models to run **  
-
-	- ~~Overall (avg across all distance and offset conditions)~~
-		- ~~accuracy x glasses model~~
-		- ~~precision x glasses model~~
-
-	- Distance (fixed offset, 0deg)
-		- accuracy x distance x glasses model
-		- precision x distance x glasses model
-
-	- Distance + Offset
-		- accuracy x distance x offset x glasses model
-		- precision x distance x offset x glasses model
 
 
+
+Fit separate models to the accuracy and precision data (i.e. centDist and RMS, respectively). Set up each model to include the following main effects:
+
+* **glasses**
+* **distance**
+* **offset**
+
+and the following interactions:
+
+* **glasses** X **distance**
+* **glasses** X **offset**
+* **glasses** X **distance** X **offset**
+
+
+
+
+ 
+
+
+
+---
 ## Session Info  
 Display all session info (R and R package version numbers)
 
