@@ -1,16 +1,14 @@
 ---
 title: "Wearable Eye-tracker Calibration Analyses"
 author: "jeff macinnes"
-date: "July 17, 2017"
-output: 
-  html_document:
-    keep_md: yes
+date: "`r format(Sys.Date())`"
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(message=FALSE)
-knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 
 # Wearable Eye-tracker Calibration Analyses
@@ -57,6 +55,12 @@ dat <- calibData %>%
 # drop the columns that are now irrelevant
 dat <- dat %>% select(-one_of(c("trial", "ptIdx")))
 
+# set condition and subj vars as factors
+dat$subj <- factor(dat$subj)
+dat$glasses <- factor(dat$glasses)
+dat$dist <- factor(dat$dist)
+dat$offset <- factor(dat$offset)
+
 # show a table
 kable(dat[1:5,], caption='Calibration data, mean by unique condition')
 ```
@@ -84,19 +88,17 @@ summary(accMod.overall)
 anova(accMod.overall)
 ```
 
-Glasses Model is a significant predictor of accuracy. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models. (Methods for running pairwise t-tests on linear model object found at: https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model)
+Glasses Model is a significant predictor of accuracy. Note that including *subj* as a random effect in this model did not account for any additional variance. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models. (Methods for running pairwise t-tests on linear model object found at: https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model)
 
 ```{r chunk4}
-library(multcomp)
-
-summary(glht(accMod.overall, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
+library(lsmeans)
+lsmeans(accMod.overall, pairwise ~ glasses)
 ```
 
 Overall, there is a significant difference in accuracy between Pupil Labs and SMI, and Pupil Labs and Tobii. No significant different between SMI and Tobii. 
 
 #### Precision
- Fit a similar linear mixed-effects model looking at precision instead of accuracy
- 
+ Fit a similar linear mixed-effects model looking at precision instead of accuracy.
  
 ```{r chunk5}
 # build linear mixed effects model predicting precision (i.e. RMS) 
@@ -108,7 +110,7 @@ anova(precMod.overall)
 Glasses model is a significant predictor of overall precision. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models.
 
 ```{r chunk6}
-summary(glht(precMod.overall, linfct = mcp(glasses = "Tukey")), test = adjusted("holm"))
+lsmeans(precMod.overall, pairwise ~ glasses)
 ```
 Tobii exhibits significantly different precision than either SMI or Pupil Labs. No significant difference between SMI and Pupil Labs.
 
@@ -151,12 +153,12 @@ accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses),
 ## Precision
 rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses), 
                   data = dat) +
-  geom_boxplot() +
   labs( 
     x = "Wearable Eye-tracker",
     y = "RMS",
     title="Precision"
   ) +
+  geom_boxplot() + 
   scale_fill_brewer(palette="Greens") +
   scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
   theme(
@@ -180,11 +182,10 @@ ggarrange(accPlot, rmsPlot,
   ggsave("figs/overallAccPrec.pdf", width = 8, height = 5)
 ```
 
+---
 
-
-
-
-Fit separate models to the accuracy and precision data (i.e. centDist and RMS, respectively). Set up each model to include the following main effects:
+## Full Model
+Fit new accuracy and precision models that include the distance and offset conditions as additional predictors. This model will have the following main effects:
 
 * **glasses**
 * **distance**
@@ -196,10 +197,64 @@ and the following interactions:
 * **glasses** X **offset**
 * **glasses** X **distance** X **offset**
 
+#### Accuracy
+
+```{r chunk8}
+# full accuracy model
+accMod.full <- lmer(centDist ~ glasses*dist*offset + (1|subj), data=dat)
+summary(accMod.full)
+anova(accMod.full)
+```
+
+Fitting the full model to the accuracy data shows significant main effect of Glasses, and significant Glasses X Distance interaction. 
+
+Next, run the pairwise comparisons for glasses at each distance. 
+
+```{r chunk9}
+lsmeans(accMod.full, pairwise ~ glasses | dist)
+```
+
+For pairwise comparisons of glasses X distance (collapsing across offset), significant differences in accuracy at:
+
+- 3M: Pupil Labs > Tobii 
+- 3M: SMI > Tobii
+
+Trend-level differences at:
+
+- 2M: Pupil Labs > Tobii
+- 3M: Pupil Labs > SMI
+
+**Insert plot of accuracy showing glasses X distance**
+
+#### Precision
+```{r chunk10}
+
+# full precision model
+precMod.full <- lmer(RMS ~ glasses*dist*offset + (1|subj), data=dat)
+summary(precMod.full)
+anova(precMod.full)
+```
+
+The full precision model shows a significant main effects of Glasses and Offset, and a significant Glasses X Offset interaction. Next, run pairwise comparisons of precision on by glasses at each offset condition. 
+
+```{r chunk11}
+lsmeans(precMod.full, pairwise ~ glasses | offset)
+```
+
+For pairwise comparisons of glasses X offset (collapsing across distance), significant differences in precision at:
+
+- 0deg: SMI > Tobii 
+- 10L: Pupil Labs > Tobii
+- 10R: Pupil Labs > Tobii
+- 10R: SMI > Tobii
+
+Trend-level differences at:
+
+- 0deg: Pupil Labs > Tobii
 
 
+**Show plot of precision by glasses at each offset condition**
 
- 
 
 
 
