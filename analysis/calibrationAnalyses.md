@@ -141,7 +141,7 @@ anova(accMod.overall)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Glasses Model is a significant predictor of accuracy. Note that including *subj* as a random effect in this model did not account for any additional variance. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models. (Methods for running pairwise t-tests on linear model object found at: <https://stats.stackexchange.com/questions/237512/how-to-perform-post-hoc-test-on-lmer-model>)
+Glasses Model is a significant predictor of accuracy. Note that including *subj* as a random effect in this model did not account for any additional variance. Next, run pairwise comparisons on glasses models to look for overall differences between glasses models.
 
 ``` r
 library(lsmeans)
@@ -252,57 +252,72 @@ Plot Accuracy and Precision by Glasses Model
 library(ggplot2)
 library(ggthemes)
 library(ggpubr)
+library(ggsignif)
 
 ## Accuracy
 accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses), 
        data = dat) +
-  geom_boxplot() +
+  geom_boxplot(aes_string(colour="glasses")) +
+  stat_summary(geom="crossbar",  fatten=1, color="white",
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) }) +
   labs( 
-    x = "Wearable Eye-tracker",
+    x = "Eye-tracker",
     y = "Visual Angle (deg)",
-    title="Accuracy"
+    title="Overall Accuracy"
     ) +
-  scale_fill_brewer(palette="Greens") +
+  scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
   theme(
     aspect.ratio = 1.5,
     panel.background = element_blank(),
-    plot.title = element_text(hjust=.5, size=18),
+    plot.title = element_text(hjust=.5, size=14),
     axis.title = element_text(size=rel(1.3)),
     axis.text.x = element_text(size = rel(1.3)),
     axis.text.y = element_text(size = rel(1.5)),
     axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
     axis.ticks.x = element_blank(),
     panel.grid.major.y = element_line(colour="darkgrey", linetype = "twodash", size=.25),
-    legend.position = "none",
+    legend.position = "none"
   ) +
-  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25)
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
+
+  ## significance annotations
+  geom_signif(y_position=2.15, xmin=1, xmax=2, annotation="*", tip_length=0.01, size=1) +
+  geom_signif(y_position=2.35, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
 
 
 ## Precision
 rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses), 
                   data = dat) +
   labs( 
-    x = "Wearable Eye-tracker",
+    x = "Eye-tracker",
     y = "RMS",
-    title="Precision"
+    title="Overall Precision"
   ) +
-  geom_boxplot() + 
-  scale_fill_brewer(palette="Greens") +
+  geom_boxplot(aes_string(colour="glasses")) +
+  stat_summary(geom="crossbar",  fatten=1, color="white",
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) }) +
+  scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
   theme(
     aspect.ratio = 1.5,
     panel.background = element_blank(),
-    plot.title = element_text(hjust=.5, size=18),
+    plot.title = element_text(hjust=.5, size=14),
     axis.title = element_text(size=rel(1.3)),
     axis.text.x = element_text(size = rel(1.3)),
     axis.text.y = element_text(size = rel(1.5)),
     axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
     axis.ticks.x = element_blank(),
     panel.grid.major.y = element_line(colour="darkgrey", linetype = "twodash", size=.25),
-    legend.position = "none",
+    legend.position = "none"
   ) +
-  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25)
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
+  
+  ## significance annotations
+  geom_signif(y_position=.58, xmin=2, xmax=3, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=.64, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
 
 ## Combine plots
 ggarrange(accPlot, rmsPlot,  
@@ -495,7 +510,55 @@ Trend-level differences at:
 -   2M: Pupil Labs &gt; Tobii
 -   3M: Pupil Labs &gt; SMI
 
-**Insert plot of accuracy showing glasses X distance**
+#### Plot Accuracy as a function of Glasses X Distance
+
+``` r
+ACC_glassesXdist <- ggplot(aes(y = centDist, x = dist, fill=glasses), 
+       data = dat) +
+  geom_boxplot(width=.69, position=position_dodge(.74), 
+               aes_string(colour="glasses")) +
+  stat_summary(geom="crossbar", width=.65, fatten=1, color="white",
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) },
+               position=position_dodge(.74)) +
+  labs( 
+    x = "Distance (m)",
+    y = "Visual Angle (deg)",
+    title="Accuracy by Distance"
+    ) +
+  scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) + 
+  scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
+  scale_x_discrete(breaks = c("1M", "2M", "3M"), labels=c("1", "2", "3")) +
+  theme(
+    aspect.ratio = .6,
+    panel.background = element_blank(),
+    plot.title = element_text(hjust=.5, size=14),
+    axis.title = element_text(size=rel(1.3)),
+    axis.text.x = element_text(size = rel(1.5)),
+    axis.text.y = element_text(size = rel(1.5)),
+    axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
+    axis.ticks.x = element_blank(),
+    panel.grid.major.y = element_line(colour="grey80", linetype = "twodash", size=.25),
+    legend.key.size = unit(2,"line"),
+    legend.key = element_blank(),
+    legend.title = element_text(face="bold")
+    ) +
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
+
+  ## significance annotations
+  geom_signif(y_position=2.35, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=2.15, xmin=3, xmax=3.23, annotation="*", tip_length=0.01, size=1) +
+  geom_signif(y_position=1.75, xmin=2.77, xmax=3, annotation="0.06", tip_length=0.01) + 
+  geom_signif(y_position=2.35, xmin=1.77, xmax=2.23, annotation="0.06", tip_length=0.01) +
+  
+  ## save
+  ggsave("figs/ACC_glasses_by_dist.pdf", width = 8, height = 5)
+
+# show plot
+ACC_glassesXdist
+```
+
+![](calibrationAnalyses_files/figure-markdown_github-ascii_identifiers/chunk10-1.png)
 
 #### Precision
 
@@ -661,7 +724,7 @@ Trend-level differences at:
 
 -   0deg: Pupil Labs &gt; Tobii
 
-**Show plot of precision by glasses at each offset condition**
+#### Plot Precision as a function of Glasses X Offset
 
 ------------------------------------------------------------------------
 
@@ -689,9 +752,10 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] ggpubr_0.1.4     magrittr_1.5     ggthemes_3.4.0   ggplot2_2.2.1   
-    ##  [5] lsmeans_2.26-3   estimability_1.2 lmerTest_2.0-33  lme4_1.1-13     
-    ##  [9] Matrix_1.2-10    dplyr_0.7.2      knitr_1.16       readr_1.1.1     
+    ##  [1] ggsignif_0.4.0   ggpubr_0.1.4     magrittr_1.5     ggthemes_3.4.0  
+    ##  [5] ggplot2_2.2.1    lsmeans_2.26-3   estimability_1.2 lmerTest_2.0-33 
+    ##  [9] lme4_1.1-13      Matrix_1.2-10    dplyr_0.7.2      knitr_1.16      
+    ## [13] readr_1.1.1     
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] Rcpp_0.12.12        mvtnorm_1.0-6       lattice_0.20-35    
