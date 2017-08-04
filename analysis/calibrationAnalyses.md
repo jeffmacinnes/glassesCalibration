@@ -726,6 +726,58 @@ Trend-level differences at:
 
 #### Plot Precision as a function of Glasses X Offset
 
+``` r
+# reorder the offset factor to control how it gets plotted
+dat$offset <- factor(dat$offset, levels=c("10Ldeg", "0deg", "10Rdeg"))
+
+PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses), 
+       data = dat) +
+  geom_boxplot(width=.69, position=position_dodge(.74), 
+               aes_string(colour="glasses")) +
+  stat_summary(geom="crossbar", width=.65, fatten=1, color="white",
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) },
+               position=position_dodge(.74)) +
+  labs( 
+    x = "Offset",
+    y = "RMS",
+    title="Precision by Offset"
+    ) +
+  scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_x_discrete(breaks = c("10Ldeg", "0deg", "10Rdeg"), labels=c("-10°", "0°", "+10°")) +
+  scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
+  theme(
+    aspect.ratio = .6,
+    panel.background = element_blank(),
+    plot.title = element_text(hjust=.5, size=14),
+    axis.title = element_text(size=rel(1.3)),
+    axis.text.x = element_text(size = rel(1.5)),
+    axis.text.y = element_text(size = rel(1.5)),
+    axis.line.y = element_line(colour = "black", size = .5, linetype = "solid"),
+    axis.ticks.x = element_blank(),
+    panel.grid.major.y = element_line(colour="grey80", linetype = "twodash", size=.25),
+    legend.key.size = unit(2,"line"),
+    legend.key = element_blank(),
+    legend.title = element_text(face="bold")
+    ) +
+  geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
+  
+  ## significance annotation
+  geom_signif(y_position=.61, xmin=.77, xmax=1.23, annotation="**", tip_length=0.01, size=1) +
+  geom_signif(y_position=.48, xmin=2, xmax=2.23, annotation="*", tip_length=0.01, size=1) +
+  geom_signif(y_position=.53, xmin=1.77, xmax=2.23, annotation="0.05", tip_length=0.01) +
+  geom_signif(y_position=.56, xmin=3, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=.61, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
+  
+  ## save
+  ggsave("figs/PREC_glasses_by_offset.pdf", width = 8, height = 5)
+
+# show plot
+PREC_glassesXoffset
+```
+
+![](calibrationAnalyses_files/figure-markdown_github-ascii_identifiers/chunk13-1.png)
+
 ------------------------------------------------------------------------
 
 Session Info
