@@ -322,7 +322,7 @@ rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses),
 ggarrange(accPlot, rmsPlot,  
           labels = c("A", "B"),
           ncol = 2, nrow = 1) + 
-  ggsave("figs/overallAccPrec.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/overallAccPrec.pdf", width = 8, height = 5)
 ```
 
 ![](calibrationAnalyses_files/figure-markdown_github-ascii_identifiers/chunk7-1.png)
@@ -551,7 +551,7 @@ ACC_glassesXdist <- ggplot(aes(y = centDist, x = dist, fill=glasses),
   geom_signif(y_position=2.35, xmin=1.77, xmax=2.23, annotation="0.06", tip_length=0.01) +
   
   ## save
-  ggsave("figs/ACC_glasses_by_dist.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/ACC_glasses_by_dist.pdf", width = 8, height = 5)
 
 # show plot
 ACC_glassesXdist
@@ -769,7 +769,7 @@ PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses),
   geom_signif(y_position=.61, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
   
   ## save
-  ggsave("figs/PREC_glasses_by_offset.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/PREC_glasses_by_offset.pdf", width = 8, height = 5)
 
 # show plot
 PREC_glassesXoffset
