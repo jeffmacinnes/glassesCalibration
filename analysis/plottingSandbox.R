@@ -16,12 +16,12 @@ ggplot(aes(y = centDist, x = dist, fill=glasses),
     y = "Visual Angle (deg)",
     title="Accuracy"
     ) +
-  scale_fill_manual(values=c("#FC940A", "#DD5431", "#4A3223")) +
-  scale_colour_manual(values=c("#FC940A", "#DD5431", "#4A3223")) + 
+  scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
+  scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) + 
   scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
   scale_x_discrete(breaks = c("1M", "2M", "3M"), labels=c("1", "2", "3")) +
   theme(
-    aspect.ratio = .5,
+    aspect.ratio = .6,
     panel.background = element_blank(),
     plot.title = element_text(hjust=.5, size=18),
     axis.title = element_text(size=rel(1.3)),
@@ -35,7 +35,7 @@ ggplot(aes(y = centDist, x = dist, fill=glasses),
     legend.title = element_text(face="bold")
     ) +
   geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
- 
+
   ## significance annotations
   geom_signif(y_position=2.35, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
   geom_signif(y_position=2.15, xmin=3, xmax=3.23, annotation="*", tip_length=0.01, size=1) +

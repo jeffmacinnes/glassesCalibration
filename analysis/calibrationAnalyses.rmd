@@ -121,7 +121,6 @@ Plot Accuracy and Precision by Glasses Model
 ```{r chunk7}
 # overall Accuracy plot
 library(ggplot2)
-library(ggthemes)
 library(ggpubr)
 library(ggsignif)
 

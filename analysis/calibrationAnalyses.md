@@ -1,7 +1,7 @@
 Wearable Eye-tracker Calibration Analyses
 ================
 jeff macinnes
-2017-08-03
+2017-08-04
 
 Wearable Eye-tracker Calibration Analyses
 =========================================
@@ -250,7 +250,6 @@ Plot Accuracy and Precision by Glasses Model
 ``` r
 # overall Accuracy plot
 library(ggplot2)
-library(ggthemes)
 library(ggpubr)
 library(ggsignif)
 
@@ -804,10 +803,9 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] ggsignif_0.4.0   ggpubr_0.1.4     magrittr_1.5     ggthemes_3.4.0  
-    ##  [5] ggplot2_2.2.1    lsmeans_2.26-3   estimability_1.2 lmerTest_2.0-33 
-    ##  [9] lme4_1.1-13      Matrix_1.2-10    dplyr_0.7.2      knitr_1.16      
-    ## [13] readr_1.1.1     
+    ##  [1] ggsignif_0.4.0   ggpubr_0.1.4     magrittr_1.5     ggplot2_2.2.1   
+    ##  [5] lsmeans_2.26-3   estimability_1.2 lmerTest_2.0-33  lme4_1.1-13     
+    ##  [9] Matrix_1.2-10    dplyr_0.7.2      knitr_1.16       readr_1.1.1     
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] Rcpp_0.12.12        mvtnorm_1.0-6       lattice_0.20-35    
