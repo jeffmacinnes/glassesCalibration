@@ -1,7 +1,7 @@
 Wearable Eye-tracker Calibration Analyses
 ================
 jeff macinnes
-2017-08-04
+2017-08-06
 
 Wearable Eye-tracker Calibration Analyses
 =========================================
@@ -266,7 +266,7 @@ accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses),
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
-  scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
+  scale_y_continuous(breaks=seq(0,3,by=1), expand=c(0,.1)) +
   theme(
     aspect.ratio = 1.5,
     panel.background = element_blank(),
@@ -282,8 +282,8 @@ accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses),
   geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
 
   ## significance annotations
-  geom_signif(y_position=2.15, xmin=1, xmax=2, annotation="*", tip_length=0.01, size=1) +
-  geom_signif(y_position=2.35, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
+  geom_signif(y_position=2.71, xmin=1, xmax=2, annotation="*", tip_length=0.01, size=1) +
+  geom_signif(y_position=2.93, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
 
 
 ## Precision
@@ -299,7 +299,8 @@ rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses),
                fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) }) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
-  scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
+  coord_cartesian(ylim=c(0,.9)) + 
+  scale_y_continuous(breaks=seq(0, 1, by=.2), expand=c(0,.03)) +
   theme(
     aspect.ratio = 1.5,
     panel.background = element_blank(),
@@ -315,14 +316,15 @@ rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses),
   geom_segment(aes(x = .4, y = 0, xend = 3.6, yend = 0), size=.25) +
   
   ## significance annotations
-  geom_signif(y_position=.58, xmin=2, xmax=3, annotation="***", tip_length=0.01, size=1) +
-  geom_signif(y_position=.64, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
+  geom_signif(y_position=.78, xmin=2, xmax=3, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=.84, xmin=1, xmax=3, annotation="***", tip_length=0.01, size=1)
 
 ## Combine plots
 ggarrange(accPlot, rmsPlot,  
           labels = c("A", "B"),
           ncol = 2, nrow = 1) + 
-  ggsave("../exposition/figs/overallAccPrec.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/overallAccPrec.pdf", width = 8, height = 5) + 
+  ggsave("../exposition/figs/overallAccPrec.png", width = 8, height = 5)
 ```
 
 ![](calibrationAnalyses_files/figure-markdown_github-ascii_identifiers/chunk7-1.png)
@@ -526,7 +528,7 @@ ACC_glassesXdist <- ggplot(aes(y = centDist, x = dist, fill=glasses),
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) + 
-  scale_y_continuous(breaks=seq(0,2,by=1), limits=c(0,2.5), expand=c(0,.1)) +
+  scale_y_continuous(breaks=seq(0,3,by=1), expand=c(0,.1)) +
   scale_x_discrete(breaks = c("1M", "2M", "3M"), labels=c("1", "2", "3")) +
   theme(
     aspect.ratio = .6,
@@ -551,7 +553,8 @@ ACC_glassesXdist <- ggplot(aes(y = centDist, x = dist, fill=glasses),
   geom_signif(y_position=2.35, xmin=1.77, xmax=2.23, annotation="0.06", tip_length=0.01) +
   
   ## save
-  ggsave("../exposition/figs/ACC_glasses_by_dist.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/ACC_glasses_by_dist.pdf", width = 8, height = 5) + 
+  ggsave("../exposition/figs/ACC_glasses_by_dist.png", width = 8, height = 5)
 
 # show plot
 ACC_glassesXdist
@@ -744,7 +747,7 @@ PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses),
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_x_discrete(breaks = c("10Ldeg", "0deg", "10Rdeg"), labels=c("-10°", "0°", "+10°")) +
-  scale_y_continuous(breaks=seq(0,.8,by=.2), limits=c(0,.7), expand=c(0,.03)) +
+  scale_y_continuous(breaks=seq(0,.8,by=.2), expand=c(0,.03)) +
   theme(
     aspect.ratio = .6,
     panel.background = element_blank(),
@@ -763,13 +766,14 @@ PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses),
   
   ## significance annotation
   geom_signif(y_position=.61, xmin=.77, xmax=1.23, annotation="**", tip_length=0.01, size=1) +
-  geom_signif(y_position=.48, xmin=2, xmax=2.23, annotation="*", tip_length=0.01, size=1) +
-  geom_signif(y_position=.53, xmin=1.77, xmax=2.23, annotation="0.05", tip_length=0.01) +
-  geom_signif(y_position=.56, xmin=3, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
-  geom_signif(y_position=.61, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=.46, xmin=2, xmax=2.23, annotation="*", tip_length=0.01, size=1) +
+  geom_signif(y_position=.51, xmin=1.77, xmax=2.23, annotation="0.05", tip_length=0.01) +
+  geom_signif(y_position=.58, xmin=3, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
+  geom_signif(y_position=.63, xmin=2.77, xmax=3.23, annotation="***", tip_length=0.01, size=1) +
   
   ## save
-  ggsave("../exposition/figs/PREC_glasses_by_offset.pdf", width = 8, height = 5)
+  ggsave("../exposition/figs/PREC_glasses_by_offset.pdf", width = 8, height = 5) +
+  ggsave("../exposition/figs/PREC_glasses_by_offset.png", width = 8, height = 5)
 
 # show plot
 PREC_glassesXoffset
