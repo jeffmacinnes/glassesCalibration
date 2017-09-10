@@ -1,7 +1,7 @@
 Wearable Eye-tracker Calibration Analyses
 ================
 jeff macinnes
-2017-08-06
+2017-09-10
 
 Wearable Eye-tracker Calibration Analyses
 =========================================
@@ -41,7 +41,7 @@ kable(calibData[1:5,], caption='Calibration Data, all subjects')
 -   RMS: **precision measure**. Root mean square distance of all gaze points in this trial from each other
 -   subj: subject number
 -   dist: subject distance from the target on this trial
--   offset: target offset (in visual angle) from the subject on this trial; negative values to the subject's left, positive values to the right
+-   offset: target offset (in gaze angle) from the subject on this trial; negative values to the subject's left, positive values to the right
 
 Average each condition across all calibration points
 ----------------------------------------------------
@@ -261,7 +261,7 @@ accPlot <- ggplot(aes(y = centDist, x = glasses, fill=glasses),
                fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) }) +
   labs( 
     x = "Eye-tracker",
-    y = "Visual Angle (deg)",
+    y = "Error in Visual Angle (deg)",
     title="Overall Accuracy"
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
@@ -523,7 +523,7 @@ ACC_glassesXdist <- ggplot(aes(y = centDist, x = dist, fill=glasses),
                position=position_dodge(.74)) +
   labs( 
     x = "Distance (m)",
-    y = "Visual Angle (deg)",
+    y = "Error in Visual Angle (deg)",
     title="Accuracy by Distance"
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
@@ -740,9 +740,9 @@ PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses),
                fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) },
                position=position_dodge(.74)) +
   labs( 
-    x = "Offset",
+    x = "Gaze Angle",
     y = "RMS",
-    title="Precision by Offset"
+    title="Precision by Gaze Angle"
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
   scale_colour_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
