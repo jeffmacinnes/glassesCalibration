@@ -119,3 +119,11 @@ After preprocessing has completed, you should have an output directory that cont
 1. worldCamera.mp4: the video from the point-of-view scene camera on the glasses
 2. frame_timestamps.tsv: table of timestamps for each frame in the world
 3. gazeData_world.tsv: gaze data, where all gaze coordinates are represented w/r/t the world camera
+
+
+
+OUTPUTS:
+
+world_gaze.m4v - world camera with gaze overlaid
+ref_gaze.m4v - reference image with mapped gaze overlaid
+

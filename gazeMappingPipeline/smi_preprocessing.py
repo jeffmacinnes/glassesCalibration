@@ -3,9 +3,6 @@ Format raw SMI data.
 
 Tested with Python 3.6, open CV 3.2
 
-The raw input data will be copied to a new directory stored in ./data.
-The output directory will be  named according to [mo-day-yr]/[hr-min-sec] of the original creation time format.
-
 The output directory will contain:
 	- worldCamera.mp4: the video from the point-of-view scene camera on the glasses
 	- frame_timestamps.tsv: table of timestamps for each frame in the world

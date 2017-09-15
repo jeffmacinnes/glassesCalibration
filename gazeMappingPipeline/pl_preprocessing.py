@@ -3,8 +3,7 @@ Format raw Pupil Labs data.
 
 Tested with Python 3.6, open CV 3.2
 
-The raw input data will be copied to a new directory stored in ./data.
-The output directory will be  named according to [mo-day-yr]/[hr-min-sec] of the original creation time format.
+The output directory will be created within the output root path specified by the user, and be named according to [mo-day-yr]/[hr-min-sec] of the original creation time.
 
 The output directory will contain:
 	- worldCamera.mp4: the video from the point-of-view scene camera on the glasses

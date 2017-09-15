@@ -4,8 +4,7 @@ Format raw Tobii data.
 Tested with Python 3.6, open CV 3.2
 
 Since the data originates on a SD card (or temp directory somewhere), a new output directory
-will be created for each recording. The output directory will be created within the output root path specified by the user,
-and named according to [mo-day-yr]/[hr-min-sec] of the original creation time format.
+will be created for each recording. The output directory will be created within the output root path specified by the user, and named according to [mo-day-yr]/[hr-min-sec] of the original creation time.
 
 The output directory will contain:
 	- frame_timestamps.tsv: frame number and corresponding timestamps for each frame in video
