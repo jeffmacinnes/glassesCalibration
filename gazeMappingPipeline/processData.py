@@ -3,19 +3,15 @@ step 2: processing
 
 This script assumes preprocessing has been done. If you haven't preprocessed the data (according to the manufacturer-specific preprocessing scripts), start there.
 
-The script will first create the output directory you specify. Next, it will copy the preprocessed data
+Once preprocessing is completed, this script can be used toloop through
+every frame of the worldCamera.mp4 video, and try to map the gaze coordinates
+from the world coordinate system, to the reference image
 
-
-
-It will loop through every frame of the worldCamera.mp4 video, and try to map the gaze coordinates from the world
-coordinate system, to the border image, to the calibration grid image.
-
-Output will be stored in a directory called "processed"
-Output:
+Output will contain:
 	- world_gaze.mp4:		world video w/ gaze points overlaid
-	- border_gaze.mp4:		video of border image w/ gaze points overlaid
-	- calibGrid_gaze.mp4:	video of calibration grid w/ gaze point overlaid
-	- gazeData_mapped.tsv:	gazeData mapped to all 3 coordinate systems
+	- ref_gaze.mp4:		video of ref image w/ gaze points overlaid
+	- ref2world_mapping.mp4 	video of reference image projected back into world video
+	- gazeData_mapped.tsv:	gazeData mapped to both coordinate systems
 """
 
 # python 2/3 compatibility
@@ -32,13 +28,8 @@ import pandas as pd
 from os.path import join
 import cv2
 
-### configuration vars
-border_path = '../referenceGrids/enhancedGrid.jpg'
-calibGrid_path = '../referenceGrids/calibrationGrid.jpg'
-
 OPENCV3 = (cv2.__version__.split('.')[0] == '3')
 print("OPENCV version " + cv2.__version__)
-
 
 def copyPreprocessing(preprocessedDir, condition):
 	"""
@@ -153,7 +144,7 @@ def processRecording(preprocessedDir, outputDir, referenceImage_path):
 	### Load the reference image
 	refImg = cv2.imread(join(outputDir, referenceImage_path.split('/')[-1]))
 	refImgColor = refImg.copy()				# store a color copy of the image
-	refImg = cv2.cvtColor(borderImg, cv2.COLOR_BGR2GRAY)  # convert the original to grayscale
+	refImg = cv2.cvtColor(refImg, cv2.COLOR_BGR2GRAY)  # convert the original to grayscale
 
 	### Prep the video data #######################################
 	# load the video, get parameters
@@ -179,7 +170,7 @@ def processRecording(preprocessedDir, outputDir, referenceImage_path):
 	# reference image output video
 	vidOut_ref_fname = join(outputDir, 'ref_gaze.m4v')
 	vidOut_ref = cv2.VideoWriter()
-	vidOut_ref.open(vidOut_ref_fname, vidCodec, fps, (borderImg.shape[1], borderImg.shape[0]), True)
+	vidOut_ref.open(vidOut_ref_fname, vidCodec, fps, (refImg.shape[1], refImg.shape[0]), True)
 
 	# ref2world mapping output video (useful for debugging)
 	vidOut_ref2world_fname = join(outputDir, 'ref2world_mapping.m4v')
@@ -209,18 +200,18 @@ def processRecording(preprocessedDir, outputDir, referenceImage_path):
 		if (ret==True) and (frameCounter in framesToUse):
 
 			# make copy of the reference image (will be used to write a frame to the reference image output videos)
-			ref_frame = borderImgColor.copy()
+			ref_frame = refImgColor.copy()
 
 			# process this frame
 			processedFrame = processFrame(frame, frameCounter, refImg_kp, refImg_des, featureDetect)
 
-			# if good match between border and this frame
+			# if good match between reference image and this frame
 			if processedFrame['foundGoodMatch']:
 
 				# grab the gaze data (world coords) for this frame
 				thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['frame_idx'] == frameCounter]
 
-				# project the border image back into the video as a way to check for good mapping
+				# project the reference image back into the video as a way to check for good mapping
 				ref2world_frame = projectImage2D(processedFrame['origFrame'], processedFrame['ref2world'], refImgColor)
 
 				# loop over all gaze data for this frame, translate to different coordinate systems
@@ -262,10 +253,10 @@ def processRecording(preprocessedDir, outputDir, referenceImage_path):
 						logFile.write('ref y exceeds height: {} on frame {} \n'.format(ref_gazeY, frameNum))
 
 					cv2.circle(frame, (int(world_gazeX), int(world_gazeY)), dotSize, dotColor, -1)		# world frame
-					cv2.circle(ref_frame, (int(ref_gazeX), int(ref_gazeY)),  dotSize, dotColor, -1)		# border frame
+					cv2.circle(ref_frame, (int(ref_gazeX), int(ref_gazeY)),  dotSize, dotColor, -1)		# reference frame
 
 			else:
-				# if not a good match, just use the original frame for the border2world
+				# if not a good match, just use the original frame for the ref2world
 				ref2world_frame = processedFrame['origFrame']
 
 			# write outputs to video
@@ -305,7 +296,7 @@ def processRecording(preprocessedDir, outputDir, referenceImage_path):
 def processFrame(frame, frameNumber, ref_kp, ref_des, featureDetect):
 	"""
 	Process a single frame from the world camera
-		- try to find match between frame and border image
+		- try to find match between frame and reference image
 		- if success, return the mapping
 	"""
 	fr = {}		# create dict to store info for this frame
@@ -318,19 +309,19 @@ def processFrame(frame, frameNumber, ref_kp, ref_des, featureDetect):
 	frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	fr['frame_gray'] = frame_gray
 
-	# try to match the frame and the border image
+	# try to match the frame and the reference image
 	try:
 		frame_kp, frame_des = featureDetect.detectAndCompute(frame_gray, None)
 		print('found {} features on frame {}'.format(len(frame_kp), frameNumber))
 
 		if len(frame_kp) < 2:
-			border_matchPts = None
+			ref_matchPts = None
 		else:
-			border_matchPts, frame_matchPts = findMatches(border_kp, border_des, frame_kp, frame_des)
+			ref_matchPts, frame_matchPts = findMatches(ref_kp, ref_des, frame_kp, frame_des)
 
 		# check if matches were found
 		try:
-			numMatches = border_matchPts.shape[0]
+			numMatches = ref_matchPts.shape[0]
 
 			# if sufficient number of matches....
 			if numMatches > 10:
@@ -349,11 +340,11 @@ def processFrame(frame, frameNumber, ref_kp, ref_des, featureDetect):
 
 		# figure out homographies between coordinate systems
 		if sufficientMatches:
-			border2world_transform, mask = cv2.findHomography(border_matchPts.reshape(-1,1,2), frame_matchPts.reshape(-1,1,2), cv2.RANSAC, 5.0)
-			world2border_transform = cv2.invert(border2world_transform)
+			ref2world_transform, mask = cv2.findHomography(ref_matchPts.reshape(-1,1,2), frame_matchPts.reshape(-1,1,2), cv2.RANSAC, 5.0)
+			world2ref_transform = cv2.invert(ref2world_transform)
 
-			fr['border2world'] = border2world_transform
-			fr['world2border'] = world2border_transform[1]
+			fr['ref2world'] = ref2world_transform
+			fr['world2ref'] = world2ref_transform[1]
 
 	except:
 		fr['foundGoodMatch'] = False
