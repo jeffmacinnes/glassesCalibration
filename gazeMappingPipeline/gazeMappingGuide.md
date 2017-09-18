@@ -114,16 +114,32 @@ the preprocessed data will be written into a folder according to the data/time l
 
 ## 2. Processing
 
-After preprocessing has completed, you should have an output directory that contains the following files (regardless of which preprocessing script you used):
+After **preprocessing** has completed, confirm you have a directory that contains the following files (regardless of which preprocessing script you used):
 
 1. worldCamera.mp4: the video from the point-of-view scene camera on the glasses
 2. frame_timestamps.tsv: table of timestamps for each frame in the world
 3. gazeData_world.tsv: gaze data, where all gaze coordinates are represented w/r/t the world camera
 
 
+Next, you can run the **processing** script. This script will loop through every frame of the worldCamera.mp4 video. For each frame, it will attempt to find matching features with a supplied reference image. If a sufficient number of matches are found, it will create a transformation to map between the frame and reference image. That transformation will then be used to map the gaze data corresponding to that frame to the reference image coordinate sytems
 
-OUTPUTS:
+```
+processsData.py
 
-world_gaze.m4v - world camera with gaze overlaid
-ref_gaze.m4v - reference image with mapped gaze overlaid
+usage:
+	python processsData.py preprocessedDir outputDir referenceImage
+	
+required arguments:
+	preprocessedDir: path to directory containing preprocessed data
+	outputDir: path to where you want the processed data saved to
+	referenceImage: path to reference image
+``` 
+Afterwards you will find the following files in the specified output directory:
+
+
+1. world_gaze.m4v - world camera with gaze overlaid
+2. ref_gaze.m4v - reference image with mapped gaze overlaid
+3. ref2world_mapping.m4v - video showing the reference image projected into the world camera video. useful for debugging, since it shows how well the mapping worked on each frame
+4. gazeData_mapped.tsv - text file with the gaze data expressed in both coordinate systems: world camera and reference image
+
 
