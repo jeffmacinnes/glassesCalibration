@@ -3,7 +3,7 @@ step 2: processing
 
 This script assumes preprocessing has been done. If you haven't preprocessed the data (according to the manufacturer-specific preprocessing scripts), start there.
 
-Once preprocessing is completed, this script can be used toloop through
+Once preprocessing is completed, this script can be used to loop through
 every frame of the worldCamera.mp4 video, and try to map the gaze coordinates
 from the world coordinate system, to the reference image
 
