@@ -162,7 +162,7 @@ rmsPlot <- ggplot(aes(y = RMS, x = glasses, fill=glasses),
                   data = dat) +
   labs( 
     x = "Eye-tracker",
-    y = "RMS",
+    y = "Std. Dev. (deg)",
     title="Overall Precision"
   ) +
   geom_boxplot(aes_string(colour="glasses")) +
@@ -328,7 +328,7 @@ PREC_glassesXoffset <- ggplot(aes(y = RMS, x = offset, fill=glasses),
                position=position_dodge(.74)) +
   labs( 
     x = "Gaze Angle",
-    y = "RMS",
+    y = "Std. Dev. (deg)",
     title="Precision by Gaze Angle"
     ) +
   scale_fill_manual("eye-tracker", values=c("#FC940A", "#DD5431", "#4A3223")) +
